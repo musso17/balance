@@ -14,8 +14,8 @@ export default function BudgetsPage() {
           Define los límites por categoría y haz seguimiento al gasto real.
         </p>
       </div>
-      <BudgetForm />
       <BudgetList />
+      <BudgetForm />
     </div>
   );
 }

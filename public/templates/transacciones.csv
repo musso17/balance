@@ -1,4 +1,4 @@
 date,category,monto,persona,tipo,nota,metodo
-2024-05-01,Supermercado,120.50,Persona A,gasto,Compras semana,Débito
-2024-05-02,Salario,3500.00,Persona B,ingreso,Sueldo mensual,Transferencia
+2024-05-01,Supermercado,120.50,Marcelo,gasto,Compras semana,Débito
+2024-05-02,Salario,3500.00,Ana,ingreso,Sueldo mensual,Transferencia
 2024-05-03,Netflix,45.00,Compartido,gasto,Streaming mensual,Crédito

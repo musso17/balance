@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${jetbrainsMono.variable} min-h-screen font-sans antialiased text-[hsl(var(--foreground))]`}
       >
         <AppProviders>{children}</AppProviders>
       </body>

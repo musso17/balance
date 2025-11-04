@@ -75,7 +75,9 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
   const savingsList = (savings ?? []) as SavingGoal[];
 
   const incomes = transactionList.filter((item) => item.tipo === "ingreso");
-  const expenses = transactionList.filter((item) => item.tipo === "gasto");
+  const expenses = transactionList.filter(
+    (item) => item.tipo === "gasto" || item.tipo === "deuda",
+  );
 
   const totalIncomes = incomes.reduce((acc, curr) => acc + curr.monto, 0);
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.monto, 0);
@@ -86,7 +88,8 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
 
   const categoriesMap = new Map<string, number>();
 
-  for (const expense of expenses) {
+  for (const expense of transactionList) {
+    if (expense.tipo !== "gasto") continue;
     const current = categoriesMap.get(expense.category) ?? 0;
     categoriesMap.set(expense.category, current + expense.monto);
   }

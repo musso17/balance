@@ -52,14 +52,14 @@ export async function POST(request: Request) {
     "month_key" | "category" | "amount"
   >;
 
-  const insertPayload = {
+  const insertPayload: Tables["budgets"]["Insert"] = {
     ...payload,
     household_id: householdId,
-  } as Tables["budgets"]["Insert"];
+  };
 
   const { data, error } = await supabase
     .from("budgets")
-    .insert([insertPayload] as any)
+    .insert([insertPayload])
     .select()
     .single();
 

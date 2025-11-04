@@ -40,17 +40,17 @@ export async function POST(request: Request) {
 
   const payload = (await request.json()) as Pick<
     Tables["debts"]["Insert"],
-    "entity" | "balance" | "monthly_payment" | "status"
+    "entity" | "balance" | "monthly_payment" | "interest_rate" | "status"
   >;
 
-  const insertPayload = {
+  const insertPayload: Tables["debts"]["Insert"] = {
     ...payload,
     household_id: householdId,
-  } as Tables["debts"]["Insert"];
+  };
 
   const { data, error } = await supabase
     .from("debts")
-    .insert([insertPayload] as any)
+    .insert([insertPayload])
     .select()
     .single();
 

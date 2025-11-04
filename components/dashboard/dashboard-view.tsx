@@ -1,72 +1,65 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  Bar,
-  BarChart,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowDownRight, TrendingUp, CircleDollarSign } from "lucide-react";
 
 import { useDashboardStore } from "@/store/dashboard-store";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
-import { formatCurrency } from "@/lib/utils/number";
+import { formatCurrencyNoDecimals } from "@/lib/utils/number";
 import { formatDate, formatMonthKey } from "@/lib/utils/date";
 import type { Transaction } from "@/types/database";
 
-const formatter = new Intl.NumberFormat("es-PE", {
-  style: "currency",
-  currency: "PEN",
-  maximumFractionDigits: 0,
-});
-
 export function DashboardView() {
-  const { monthKey, setMonthKey, showDebtImpact, toggleDebtImpact } =
-    useDashboardStore();
+  const { monthKey, setMonthKey } = useDashboardStore();
   const { data, isLoading, isError, error } = useDashboardData(monthKey);
 
-  const chartData = useMemo(() => {
-    if (!data) return [];
+  const transactions = (data?.transactions ?? []).slice(0, 5);
+  const budgetPreview = useMemo(() => {
+    if (!data?.categories) return [];
 
-    return data.categories.map((category) => ({
-      name: category.category,
-      Gastos: category.expense,
-      Presupuesto: category.budget ?? 0,
-    }));
+    return data.categories
+      .filter((category) => (category.budget ?? 0) > 0)
+      .map((category) => {
+        const planned = category.budget ?? 0;
+        const actual = category.expense ?? 0;
+        const usage = planned > 0 ? Math.min(actual / planned, 1) : 0;
+        return {
+          name: category.category,
+          planned,
+          actual,
+          usage,
+        };
+      })
+      .sort((a, b) => b.usage - a.usage)
+      .slice(0, 3);
   }, [data]);
 
-  const transactions = (data?.transactions ?? []).slice(0, 5);
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-base font-semibold text-foreground sm:text-lg lg:text-xl">
             {formatMonthKey(monthKey)}
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground sm:text-sm">
             Resumen financiero del hogar en el mes seleccionado.
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-muted-foreground">
+          <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground sm:text-sm">
             Mes
           </label>
           <input
             type="month"
             value={monthKey}
             onChange={(event) => setMonthKey(event.target.value)}
-            className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+            className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/25"
           />
         </div>
       </header>
 
       {isLoading && (
-        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-border">
+        <div className="flex min-h-[320px] items-center justify-center rounded-xl border border-dashed border-[hsl(var(--border))]">
           <span className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
             Cargando datos del mes...
@@ -75,7 +68,7 @@ export function DashboardView() {
       )}
 
       {isError && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
           {error instanceof Error
             ? error.message
             : "No pudimos cargar el dashboard"}
@@ -84,173 +77,43 @@ export function DashboardView() {
 
       {data && !isLoading && (
         <>
-          <section className="grid gap-4 md:grid-cols-4">
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
             <MetricCard
               title="Ingresos"
-              value={formatCurrency(data.totals.incomes)}
+              value={formatCurrencyNoDecimals(data.totals.incomes)}
               hint="Total de ingresos confirmados"
+              icon={ArrowUpRight}
+              tone="positive"
             />
             <MetricCard
               title="Gastos"
-              value={formatCurrency(data.totals.expenses)}
+              value={formatCurrencyNoDecimals(data.totals.expenses)}
               hint="Gasto acumulado del mes"
+              icon={ArrowDownRight}
+              tone="negative"
             />
             <MetricCard
               title="Balance"
-              value={formatCurrency(data.totals.balance)}
+              value={formatCurrencyNoDecimals(data.totals.balance)}
               hint="Ingresos menos gastos"
-              tone={data.totals.balance >= 0 ? "positive" : "negative"}
+              icon={CircleDollarSign}
+              tone={data.totals.balance >= 0 ? "default" : "negative"}
             />
             <MetricCard
               title="Ahorro promedio"
               value={`${Math.round(data.totals.savingsProgress * 100)}%`}
               hint="Progreso sobre metas de ahorro"
+              icon={TrendingUp}
             />
           </section>
 
-          <section className="grid gap-6 lg:grid-cols-[3fr_2fr]">
-            <div className="space-y-4 rounded-2xl border border-border/70 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Gastos por categoría
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Compara cada categoría con su presupuesto planificado.
-                  </p>
-                </div>
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    checked={showDebtImpact}
-                    onChange={toggleDebtImpact}
-                    className="size-4 rounded border-border text-foreground focus:ring-foreground/30"
-                  />
-                  Incluir impacto de deudas
-                </label>
-              </div>
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={chartData}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                  >
-                    <XAxis
-                      dataKey="name"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis
-                      tickFormatter={(value: number) => formatter.format(value)}
-                      tick={{ fontSize: 12 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      formatter={(value: number) => formatCurrency(value)}
-                      labelStyle={{ fontWeight: 600 }}
-                    />
-                    <Legend />
-                    <Bar dataKey="Gastos" fill="#111827" radius={[8, 8, 0, 0]} />
-                    <Bar
-                      dataKey="Presupuesto"
-                      fill="#d1d5db"
-                      radius={[8, 8, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            <div className="space-y-4 rounded-2xl border border-border/70 p-6">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  Impacto de deudas
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Pagos mensuales que afectan el flujo de caja.
-                </p>
-              </div>
-              <div className="space-y-3">
-                {data.debts.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Sin deudas registradas por ahora.
-                  </p>
-                )}
-                {data.debts.map((debt) => (
-                  <article
-                    key={debt.id}
-                    className="flex items-start justify-between rounded-xl border border-border px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {debt.entity}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Saldo {formatCurrency(debt.balance)}
-                      </p>
-                    </div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {formatCurrency(debt.monthly_payment)}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </section>
-
           <section className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border/70 p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Presupuesto vs Real
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Seguimiento de cada categoría del mes.
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {data.categories.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Empieza creando transacciones y presupuestos para ver tus
-                    avances.
-                  </p>
-                )}
-                {data.categories.map((category) => {
-                  const budget = category.budget ?? 0;
-                  const progress =
-                    budget > 0 ? Math.min(category.expense / budget, 1) : 0;
-
-                  return (
-                    <div key={category.category} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm font-medium text-foreground">
-                        <span>{category.category}</span>
-                        <span>
-                          {formatCurrency(category.expense)}{" "}
-                          <span className="text-xs text-muted-foreground">
-                            / {formatCurrency(budget)}
-                          </span>
-                        </span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-foreground transition-all"
-                          style={{ width: `${progress * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-border/70 p-6">
+            <div className="glass-panel space-y-4 p-4 sm:p-6">
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-foreground">
+                <h3 className="text-sm font-semibold text-foreground sm:text-base">
                   Últimas transacciones
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground sm:text-sm">
                   Los últimos movimientos registrados por la pareja.
                 </p>
               </div>
@@ -265,6 +128,49 @@ export function DashboardView() {
                 ))}
               </div>
             </div>
+            <div className="glass-panel space-y-4 p-4 sm:p-6">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-foreground sm:text-base">
+                  Presupuestos en tiempo real
+                </h3>
+                <p className="text-xs text-muted-foreground sm:text-sm">
+                  Cómo va el consumo de tus presupuestos más activos.
+                </p>
+              </div>
+              <div className="space-y-3">
+                {budgetPreview.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Aún no registras presupuestos este mes.
+                  </p>
+                )}
+                {budgetPreview.map((item) => (
+                  <article key={item.name} className="subdued-card space-y-2 p-3 sm:p-4">
+                    <div className="flex flex-col gap-1 text-sm font-medium text-foreground sm:flex-row sm:items-center sm:justify-between">
+                      <span>{item.name}</span>
+                      <span className="text-sm font-semibold">
+                        {formatCurrencyNoDecimals(item.actual)}
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          / {formatCurrencyNoDecimals(item.planned)}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="budget-progress-track">
+                      <div
+                        className="budget-progress-fill"
+                        style={{
+                          width: `${item.usage * 100}%`,
+                          backgroundColor:
+                            item.usage >= 1 ? "hsl(var(--danger))" : "hsl(var(--primary))",
+                        }}
+                      />
+                      <span className="budget-progress-label">
+                        {Math.round(item.usage * 100)}%
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
           </section>
         </>
       )}
@@ -276,57 +182,67 @@ function MetricCard({
   title,
   value,
   hint,
+  icon: Icon,
   tone = "default",
 }: {
   title: string;
   value: string;
   hint: string;
+  icon: React.ElementType;
   tone?: "default" | "positive" | "negative";
 }) {
-  const toneStyles =
-    tone === "positive"
-      ? "bg-emerald-500/10 text-emerald-700"
-      : tone === "negative"
-        ? "bg-rose-500/10 text-rose-600"
-        : "text-foreground";
+  const tones = {
+    positive: {
+      badge: "bg-emerald-500/15 text-emerald-600",
+      value: "text-emerald-600",
+    },
+    negative: {
+      badge: "bg-rose-500/15 text-rose-600",
+      value: "text-rose-600",
+    },
+    default: {
+      badge: "bg-sky-500/15 text-primary",
+      value: "text-primary",
+    },
+  } as const;
+
+  const toneStyles = tones[tone];
 
   return (
-    <div className="space-y-2 rounded-2xl border border-border bg-white/80 p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="subdued-card space-y-3 p-4 sm:p-5 transition hover:shadow-lg">
+      <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold sm:text-xs ${toneStyles.badge}`}>
+        <Icon className="size-4" />
         {title}
+      </span>
+      <p className={`text-2xl font-semibold tracking-tight sm:text-3xl ${toneStyles.value}`}>
+        {value}
       </p>
-      <p className={`text-xl font-semibold ${toneStyles}`}>{value}</p>
-      <p className="text-xs text-muted-foreground">{hint}</p>
+      <p className="text-xs text-muted-foreground sm:text-sm">{hint}</p>
     </div>
   );
 }
 
 function TransactionItem({ data }: { data: Transaction }) {
   return (
-    <article className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
-      <div>
-        <p className="text-sm font-medium text-foreground">
-          {data.category} · {data.persona}
+    <article className="subdued-card flex flex-col gap-3 px-4 py-3 transition hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-foreground sm:text-base">
+          {data.category}
         </p>
-        <p className="text-xs text-muted-foreground">
-          {formatDate(data.date)} · {data.metodo}
+        <p className="text-xs text-muted-foreground sm:text-sm">
+          {formatDate(data.date)} · {data.persona} · {data.metodo ?? "—"}
         </p>
         {data.nota && (
-          <p className="mt-1 text-xs text-muted-foreground/80">
+          <p className="text-xs text-muted-foreground/80 sm:text-sm">
             {data.nota}
           </p>
         )}
       </div>
-      <div
-        className={
-          data.tipo === "ingreso"
-            ? "text-sm font-semibold text-emerald-600"
-            : "text-sm font-semibold text-foreground"
-        }
+      <p
+        className={`text-sm font-semibold sm:text-base ${data.tipo === "ingreso" ? "text-emerald-600" : "text-rose-500"}`}
       >
-        {formatCurrency(data.monto)}
-      </div>
+        {data.tipo === "gasto" ? "-" : "+"} {formatCurrencyNoDecimals(data.monto)}
+      </p>
     </article>
   );
 }
-

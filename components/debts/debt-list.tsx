@@ -26,19 +26,19 @@ export function DebtList() {
   const { data, isLoading, isError, error } = useDebts();
 
   return (
-    <div className="space-y-4 rounded-2xl border border-border/70 p-6">
-      <header>
-        <h3 className="text-sm font-semibold text-foreground">
+    <div className="glass-panel space-y-6 p-4 sm:p-6">
+      <header className="space-y-1">
+        <h3 className="text-base font-semibold text-foreground">
           Compromisos vigentes
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Controla el saldo pendiente y los pagos pactados.
         </p>
       </header>
 
       {isLoading && (
-        <div className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border">
-          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/40 text-sm text-muted-foreground backdrop-blur">
+          <span className="flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             Cargando deudas...
           </span>
@@ -46,13 +46,13 @@ export function DebtList() {
       )}
 
       {isError && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+        <div className="rounded-2xl border border-rose-200/70 bg-rose-100/70 px-4 py-3 text-sm text-rose-600">
           {error instanceof Error ? error.message : "Error al cargar las deudas"}
         </div>
       )}
 
       {!isLoading && data && data.length === 0 && (
-        <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-dashed border-white/60 bg-white/40 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur">
           Sin deudas registradas. Añade compromisos para planificar mejor.
         </p>
       )}
@@ -83,6 +83,7 @@ function DebtRowItem({ debt }: { debt: Debt }) {
       entity: debt.entity,
       balance: debt.balance,
       monthly_payment: debt.monthly_payment,
+      interest_rate: debt.interest_rate ?? undefined,
       status: debt.status,
     },
   });
@@ -92,9 +93,10 @@ function DebtRowItem({ debt }: { debt: Debt }) {
       entity: debt.entity,
       balance: debt.balance,
       monthly_payment: debt.monthly_payment,
+      interest_rate: debt.interest_rate ?? undefined,
       status: debt.status,
     });
-  }, [debt.balance, debt.entity, debt.monthly_payment, debt.status, reset]);
+  }, [debt.balance, debt.entity, debt.monthly_payment, debt.interest_rate, debt.status, reset]);
 
   const onSubmit = async (values: DebtFormValues) => {
     try {
@@ -124,24 +126,24 @@ function DebtRowItem({ debt }: { debt: Debt }) {
 
   const statusClass =
     debt.status === "pagada"
-      ? "bg-emerald-100 text-emerald-700"
+      ? "border border-emerald-400/40 bg-emerald-500/15 text-emerald-600"
       : debt.status === "morosa"
-        ? "bg-rose-100 text-rose-600"
-        : "bg-amber-100 text-amber-700";
+        ? "border border-rose-400/40 bg-rose-500/15 text-rose-600"
+        : "border border-amber-400/40 bg-amber-500/20 text-amber-700";
 
   return (
-    <article className="rounded-xl border border-border/80 p-4">
+    <article className="subdued-card space-y-4 p-4 md:p-5">
       {isEditing ? (
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="grid gap-3 md:grid-cols-2"
         >
-          <label className="flex flex-col gap-1 text-sm md:col-span-2">
+          <label className="flex flex-col gap-2 text-sm md:col-span-2">
             <span className="font-medium text-foreground">Entidad</span>
             <input
               type="text"
               {...register("entity")}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+              className="soft-input"
             />
             {errors.entity && (
               <span className="text-xs text-rose-500">
@@ -149,13 +151,13 @@ function DebtRowItem({ debt }: { debt: Debt }) {
               </span>
             )}
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">Saldo</span>
             <input
               type="number"
               step="0.01"
               {...register("balance")}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+              className="soft-input"
             />
             {errors.balance && (
               <span className="text-xs text-rose-500">
@@ -163,13 +165,13 @@ function DebtRowItem({ debt }: { debt: Debt }) {
               </span>
             )}
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">Pago mensual</span>
             <input
               type="number"
               step="0.01"
               {...register("monthly_payment")}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+              className="soft-input"
             />
             {errors.monthly_payment && (
               <span className="text-xs text-rose-500">
@@ -177,11 +179,25 @@ function DebtRowItem({ debt }: { debt: Debt }) {
               </span>
             )}
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-2 text-sm">
+            <span className="font-medium text-foreground">Interés (%)</span>
+            <input
+              type="number"
+              step="0.01"
+              {...register("interest_rate")}
+              className="soft-input"
+            />
+            {errors.interest_rate && (
+              <span className="text-xs text-rose-500">
+                {errors.interest_rate.message}
+              </span>
+            )}
+          </label>
+          <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">Estado</span>
             <select
               {...register("status")}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+              className="soft-input"
             >
               <option value="activa">Activa</option>
               <option value="pagada">Pagada</option>
@@ -192,7 +208,7 @@ function DebtRowItem({ debt }: { debt: Debt }) {
             <button
               type="submit"
               disabled={updateMutation.isPending}
-              className="flex items-center gap-2 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background transition hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-70"
+              className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {updateMutation.isPending && (
                 <Loader2 className="size-4 animate-spin" />
@@ -206,11 +222,12 @@ function DebtRowItem({ debt }: { debt: Debt }) {
                   entity: debt.entity,
                   balance: debt.balance,
                   monthly_payment: debt.monthly_payment,
+                  interest_rate: debt.interest_rate ?? undefined,
                   status: debt.status,
                 });
                 setIsEditing(false);
               }}
-              className="flex items-center gap-1 text-xs font-medium text-muted-foreground"
+              className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
             >
               <X className="size-3" /> Cancelar
             </button>
@@ -225,8 +242,13 @@ function DebtRowItem({ debt }: { debt: Debt }) {
             <p className="text-xs text-muted-foreground">
               Saldo: {formatCurrency(debt.balance)}
             </p>
+            {typeof debt.interest_rate === "number" && (
+              <p className="text-xs text-muted-foreground">
+                Interés: {debt.interest_rate}%
+              </p>
+            )}
           </div>
-          <div className="flex items-center gap-6 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-sm md:justify-end">
             <div className="text-right">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 Pago mensual
@@ -235,14 +257,14 @@ function DebtRowItem({ debt }: { debt: Debt }) {
                 {formatCurrency(debt.monthly_payment)}
               </p>
             </div>
-            <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusClass}`}>
+            <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusClass}`}>
               {statusLabels[debt.status] ?? debt.status}
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="rounded-full border border-border p-2 text-muted-foreground transition hover:border-foreground/30 hover:text-foreground"
+                className="rounded-2xl border border-white/60 bg-white/70 p-2 text-muted-foreground shadow-sm transition hover:text-primary"
               >
                 <Pencil className="size-4" />
               </button>
@@ -250,7 +272,7 @@ function DebtRowItem({ debt }: { debt: Debt }) {
                 type="button"
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
-                className="rounded-full border border-border p-2 text-muted-foreground transition hover:border-rose-300 hover:text-rose-600 disabled:cursor-not-allowed"
+                className="rounded-2xl border border-white/60 bg-white/70 p-2 text-muted-foreground shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
               >
                 {deleteMutation.isPending ? (
                   <Loader2 className="size-4 animate-spin" />

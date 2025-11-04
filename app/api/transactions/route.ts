@@ -4,6 +4,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { Tables } from "@/types/database";
 
+export const revalidate = 0;
+
 export async function GET(request: Request) {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
@@ -29,9 +31,11 @@ export async function GET(request: Request) {
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + 1);
 
+    const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+
     query = query
-      .gte("date", startDate.toISOString())
-      .lt("date", endDate.toISOString());
+      .gte("date", formatDate(startDate))
+      .lt("date", formatDate(endDate));
   }
 
   const { data, error } = await query;
@@ -43,7 +47,13 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json(data ?? []);
+  return NextResponse.json(data ?? [], {
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
+  });
 }
 
 export async function POST(request: Request) {
@@ -62,14 +72,14 @@ export async function POST(request: Request) {
     "date" | "category" | "monto" | "persona" | "tipo" | "nota" | "metodo"
   >;
 
-  const insertPayload = {
+  const insertPayload: Tables["transactions"]["Insert"] = {
     ...payload,
     household_id: householdId,
-  } as Tables["transactions"]["Insert"];
+  };
 
   const { data, error } = await supabase
     .from("transactions")
-    .insert([insertPayload] as any)
+    .insert([insertPayload])
     .select()
     .single();
 

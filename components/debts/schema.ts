@@ -10,6 +10,11 @@ export const debtSchema = z.object({
     .number()
     .positive("Ingresa un pago mensual mayor a 0")
     .max(1_000_000, "Monto demasiado alto"),
+  interest_rate: z.coerce
+    .number()
+    .min(0, "El interés no puede ser negativo")
+    .max(100, "El interés no puede ser mayor a 100")
+    .optional(),
   status: z.enum(["activa", "pagada", "morosa"]),
 });
 

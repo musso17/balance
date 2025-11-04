@@ -51,10 +51,10 @@ export function TransactionImport() {
             row.tipo?.toLowerCase() === "ingreso" ? "ingreso" : "gasto";
 
           return {
-            date: row.date ?? `${monthKey}-01`,
+            date: row.date ? row.date : `${monthKey}-01`,
             category: row.category ?? "Sin categoría",
             monto: Number.isFinite(monto) ? monto : 0,
-            persona: row.persona ?? "Persona A",
+            persona: row.persona ?? "Marcelo",
             tipo,
             nota: row.nota ?? null,
             metodo: row.metodo ?? null,
@@ -75,17 +75,21 @@ export function TransactionImport() {
     if (rows.length === 0) return;
 
     try {
-      await mutation.mutateAsync(
+      const result = await mutation.mutateAsync(
         rows.map((row) => ({
           ...row,
           monto: row.monto,
         })),
       );
       setRows([]);
-      toast.success("Transacciones importadas correctamente.");
+      if (result.imported > 0) {
+        toast.success(`${result.imported} transacciones importadas correctamente.`);
+      } else {
+        toast.info("No se importaron nuevas transacciones.");
+      }
     } catch (err) {
       console.error("[transactions] import", err);
-      const message = "No pudimos importar las transacciones.";
+      const message = err instanceof Error ? err.message : "No pudimos importar las transacciones.";
       setError(message);
       toast.error(message);
     }
@@ -95,12 +99,11 @@ export function TransactionImport() {
     <section className="space-y-4 rounded-2xl border border-border/70 p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">
+          <h3 className="text-base font-semibold text-foreground">
             Importar desde CSV
           </h3>
-          <p className="text-xs text-muted-foreground">
-            Formato esperado: date, category, monto, persona, tipo, nota,
-            metodo.
+          <p className="text-sm text-muted-foreground">
+            Sube un archivo CSV para registrar múltiples transacciones a la vez.
           </p>
         </div>
         <a
@@ -111,6 +114,11 @@ export function TransactionImport() {
           <FileSpreadsheet className="size-4" />
           Descargar plantilla
         </a>
+      </div>
+
+      <div className="text-xs text-muted-foreground space-y-1">
+        <p><span className="font-semibold">Formato esperado:</span> un archivo CSV con las columnas: <code>date</code>, <code>category</code>, <code>monto</code>, <code>persona</code>, <code>tipo</code>, <code>nota</code>, <code>metodo</code>.</p>
+        <p><span className="font-semibold">Notas:</span> La columna <code>date</code> debe tener el formato <code>YYYY-MM-DD</code>. La columna <code>tipo</code> debe ser <code>ingreso</code> o <code>gasto</code>.</p>
       </div>
 
       <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border/80 bg-muted/30 px-6 py-10 text-center text-sm text-muted-foreground transition hover:border-foreground/20 hover:text-foreground">

@@ -1,5 +1,6 @@
 import { SavingForm } from "@/components/savings/saving-form";
 import { SavingList } from "@/components/savings/saving-list";
+import { SavingsDistribution } from "@/components/savings/savings-distribution";
 
 export default function SavingsPage() {
   return (
@@ -15,9 +16,9 @@ export default function SavingsPage() {
           Organicen sus objetivos y midan cuánto les falta para lograrlos.
         </p>
       </div>
-      <SavingForm />
+      <SavingsDistribution />
       <SavingList />
+      <SavingForm />
     </div>
   );
 }
-

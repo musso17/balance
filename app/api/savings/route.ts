@@ -43,14 +43,14 @@ export async function POST(request: Request) {
     "goal_name" | "target_amount" | "current_amount" | "deadline"
   >;
 
-  const insertPayload = {
+  const insertPayload: Tables["savings"]["Insert"] = {
     ...payload,
     household_id: householdId,
-  } as Tables["savings"]["Insert"];
+  };
 
   const { data, error } = await supabase
     .from("savings")
-    .insert([insertPayload] as any)
+    .insert([insertPayload])
     .select()
     .single();
 

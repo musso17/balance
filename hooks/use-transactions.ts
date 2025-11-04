@@ -22,7 +22,10 @@ export interface CreateTransactionInput {
   category: string;
   monto: number;
   persona: string;
-  tipo: "ingreso" | "gasto";
+  tipo: "ingreso" | "gasto" | "deuda";
+  debt_id?: string;
+  debt_action?: "pay_installment" | "amortize";
+  debt_amount?: number;
   nota?: string | null;
   metodo?: string | null;
 }
@@ -56,30 +59,6 @@ export function useCreateTransaction() {
   });
 }
 
-export function useImportTransactions() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (transactions: CreateTransactionInput[]) => {
-      const response = await fetch("/api/transactions/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactions }),
-      });
-
-      if (!response.ok) {
-        throw new Error("No pudimos importar las transacciones");
-      }
-
-      return (await response.json()) as { imported: number };
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    },
-  });
-}
-
 export function useUpdateTransaction() {
   const queryClient = useQueryClient();
 
@@ -96,6 +75,30 @@ export function useUpdateTransaction() {
       }
 
       return (await response.json()) as Transaction;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useImportTransactions() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: CreateTransactionInput[]) => {
+      const response = await fetch("/api/transactions/bulk-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactions: payload }),
+      });
+
+      if (!response.ok) {
+        throw new Error("No pudimos importar las transacciones");
+      }
+
+      return (await response.json()) as { imported: number };
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["transactions"] });

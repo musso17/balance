@@ -1,6 +1,5 @@
 import { TransactionForm } from "@/components/transactions/transaction-form";
 import { TransactionTable } from "@/components/transactions/transaction-table";
-import { TransactionImport } from "@/components/transactions/transaction-import";
 
 export default function TransactionsPage() {
   return (
@@ -15,7 +14,6 @@ export default function TransactionsPage() {
         </p>
       </div>
       <TransactionForm />
-      <TransactionImport />
       <TransactionTable />
     </div>
   );

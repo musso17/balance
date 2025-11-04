@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,25 +16,30 @@ import { formatCurrency } from "@/lib/utils/number";
 import { formatDate } from "@/lib/utils/date";
 
 import { savingSchema, type SavingFormValues } from "./schema";
+import { mockSavings } from "./mock-data";
 import type { SavingGoal } from "@/types/database";
 
 export function SavingList() {
-  const { data, isLoading, isError, error } = useSavings();
+  // const { data, isLoading, isError, error } = useSavings();
+  const data = mockSavings as SavingGoal[];
+  const isLoading = false;
+  const isError = false as boolean;
+  const error = null as Error | null;
 
   return (
-    <div className="space-y-4 rounded-2xl border border-border/70 p-6">
-      <header>
-        <h3 className="text-sm font-semibold text-foreground">
+    <div className="glass-panel space-y-6 p-4 sm:p-6">
+      <header className="space-y-1">
+        <h3 className="text-base font-semibold text-foreground">
           Metas activas
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Controla el avance mensual para cumplir sus objetivos.
         </p>
       </header>
 
       {isLoading && (
-        <div className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border">
-          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/40 text-sm text-muted-foreground backdrop-blur">
+          <span className="flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             Cargando metas de ahorro...
           </span>
@@ -41,7 +47,7 @@ export function SavingList() {
       )}
 
       {isError && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+        <div className="rounded-2xl border border-rose-200/70 bg-rose-100/70 px-4 py-3 text-sm text-rose-600">
           {error instanceof Error
             ? error.message
             : "Error al cargar las metas de ahorro"}
@@ -49,13 +55,13 @@ export function SavingList() {
       )}
 
       {!isLoading && data && data.length === 0 && (
-        <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-dashed border-white/60 bg-white/40 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur">
           Añadan metas para monitorear su progreso financiero.
         </p>
       )}
 
       {!isLoading && data && data.length > 0 && (
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {data.map((goal) => (
             <SavingRowItem key={goal.id} goal={goal} />
           ))}
@@ -127,20 +133,23 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
   const progress = goal.target_amount
     ? Math.min(goal.current_amount / goal.target_amount, 1)
     : 0;
+  const percent = Math.round(progress * 100);
+  const isComplete = percent >= 100;
+  const progressColor = isComplete ? "bg-emerald-500" : "bg-primary";
 
   return (
-    <article className="space-y-3 rounded-xl border border-border/80 p-4">
+    <article className="subdued-card space-y-4 p-4 md:p-5">
       {isEditing ? (
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="grid gap-3 md:grid-cols-2"
         >
-          <label className="flex flex-col gap-1 text-sm md:col-span-2">
+          <label className="flex flex-col gap-2 text-sm md:col-span-2">
             <span className="font-medium text-foreground">Meta</span>
             <input
               type="text"
               {...register("goal_name")}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+              className="soft-input"
             />
             {errors.goal_name && (
               <span className="text-xs text-rose-500">
@@ -148,13 +157,13 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
               </span>
             )}
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">Objetivo</span>
             <input
               type="number"
               step="0.01"
               {...register("target_amount")}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+              className="soft-input"
             />
             {errors.target_amount && (
               <span className="text-xs text-rose-500">
@@ -162,13 +171,13 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
               </span>
             )}
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">Ahorro actual</span>
             <input
               type="number"
               step="0.01"
               {...register("current_amount")}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+              className="soft-input"
             />
             {errors.current_amount && (
               <span className="text-xs text-rose-500">
@@ -176,19 +185,19 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
               </span>
             )}
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">Fecha objetivo</span>
             <input
               type="date"
               {...register("deadline")}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+              className="soft-input"
             />
           </label>
           <div className="md:col-span-2 flex items-center gap-3 pt-2">
             <button
               type="submit"
               disabled={updateMutation.isPending}
-              className="flex items-center gap-2 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background transition hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-70"
+              className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {updateMutation.isPending && (
                 <Loader2 className="size-4 animate-spin" />
@@ -206,14 +215,14 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
                 });
                 setIsEditing(false);
               }}
-              className="flex items-center gap-1 text-xs font-medium text-muted-foreground"
+              className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
             >
               <X className="size-3" /> Cancelar
             </button>
           </div>
         </form>
       ) : (
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold text-foreground">
               {goal.goal_name}
@@ -224,9 +233,10 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-sm md:justify-end">
             <div className="text-right">
-              <p className="font-semibold text-foreground">
+              <p className="muted-label">Acumulado</p>
+              <p className="text-base font-semibold text-foreground">
                 {formatCurrency(goal.current_amount)}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -237,31 +247,42 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="rounded-full border border-border p-2 text-muted-foreground transition hover:border-foreground/30 hover:text-foreground"
+                className="rounded-2xl border border-white/60 bg-white/70 p-1.5 text-muted-foreground shadow-sm transition hover:text-primary"
               >
-                <Pencil className="size-4" />
+                <Pencil className="size-3.5" />
               </button>
               <button
                 type="button"
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
-                className="rounded-full border border-border p-2 text-muted-foreground transition hover:border-rose-300 hover:text-rose-600 disabled:cursor-not-allowed"
+                className="rounded-2xl border border-white/60 bg-white/70 p-1.5 text-muted-foreground shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
               >
                 {deleteMutation.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <Loader2 className="size-3.5 animate-spin" />
                 ) : (
-                  <Trash2 className="size-4" />
+                  <Trash2 className="size-3.5" />
                 )}
               </button>
             </div>
           </div>
         </div>
       )}
-      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-emerald-500 transition-all"
-          style={{ width: `${progress * 100}%` }}
-        />
+      <div className="space-y-2">
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>{formatCurrency(goal.current_amount)} de {formatCurrency(goal.target_amount)}</span>
+          <span>{percent}%</span>
+        </div>
+        <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${progressColor}`}
+            style={{ width: `${progress * 100}%` }}
+          />
+        </div>
+        {isComplete && (
+          <p className="text-xs font-medium text-emerald-600">
+            ¡Meta cumplida! Considera crear una nueva prioridad.
+          </p>
+        )}
       </div>
     </article>
   );

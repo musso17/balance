@@ -1,4 +1,3 @@
-/*
 import { NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/supabase/auth";
@@ -60,4 +59,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ imported: data?.length ?? 0 });
 }
-*/

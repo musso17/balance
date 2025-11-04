@@ -61,7 +61,7 @@ export function useUpdateBudget() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, month_key, ...payload }: UpdateBudgetInput) => {
+    mutationFn: async ({ id, ...payload }: UpdateBudgetInput) => {
       const response = await fetch(`/api/budgets/${id}`, {
         method: "PATCH",
         headers: {
@@ -89,8 +89,8 @@ export function useDeleteBudget() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, month_key }: { id: string; month_key: string }) => {
-      const response = await fetch(`/api/budgets/${id}`, {
+    mutationFn: async (input: { id: string; month_key: string }) => {
+      const response = await fetch(`/api/budgets/${input.id}`, {
         method: "DELETE",
       });
 

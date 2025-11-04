@@ -21,12 +21,14 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const payload = (await request.json()) as Tables["budgets"]["Update"];
-  const { household_id: _ignoredHousehold, id: _ignoredId, ...rest } = payload;
+  const { household_id: _householdToIgnore, id: _idToIgnore, ...rest } = payload;
+  void _householdToIgnore;
+  void _idToIgnore;
   const updatePayload = rest as Tables["budgets"]["Update"];
 
   const { data, error } = await supabase
     .from("budgets")
-    .update(updatePayload as never)
+    .update(updatePayload)
     .eq("id", id)
     .eq("household_id", householdId)
     .select()

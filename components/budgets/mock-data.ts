@@ -1,0 +1,23 @@
+export const mockBudgets = {
+  "2025-11": [
+    { id: "1", category: "Alquiler", amount: 2415, month_key: "2025-11" },
+    { id: "2", category: "Compras Casa", amount: 1500, month_key: "2025-11" },
+    { id: "3", category: "Luz", amount: 180, month_key: "2025-11" },
+    { id: "4", category: "Teléfono", amount: 165, month_key: "2025-11" },
+    { id: "5", category: "Mantenimiento", amount: 310, month_key: "2025-11" },
+    { id: "6", category: "Internet", amount: 99, month_key: "2025-11" },
+    { id: "7", category: "Psicólogas", amount: 1240, month_key: "2025-11" },
+    { id: "8", category: "Membresías", amount: 207, month_key: "2025-11" },
+    { id: "9", category: "Carro", amount: 2613, month_key: "2025-11" },
+    { id: "10", category: "Gasolina", amount: 120, month_key: "2025-11" },
+    { id: "11", category: "Tere", amount: 200, month_key: "2025-11" },
+    { id: "12", category: "Lavandería", amount: 200, month_key: "2025-11" },
+    { id: "13", category: "Deporte", amount: 360, month_key: "2025-11" },
+    { id: "14", category: "Laser", amount: 192, month_key: "2025-11" },
+    { id: "15", category: "Gatos", amount: 680, month_key: "2025-11" },
+    { id: "16", category: "Entretenimiento", amount: 100, month_key: "2025-11" },
+    { id: "17", category: "Restaurantes", amount: 300, month_key: "2025-11" },
+    { id: "18", category: "Taxis", amount: 120, month_key: "2025-11" },
+    { id: "19", category: "Extras", amount: 500, month_key: "2025-11" },
+  ],
+};

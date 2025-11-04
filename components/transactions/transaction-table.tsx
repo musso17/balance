@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -12,22 +13,39 @@ import {
 import { formatCurrency } from "@/lib/utils/number";
 import { formatDate } from "@/lib/utils/date";
 import type { Transaction } from "@/types/database";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 import { TransactionEditForm } from "./transaction-edit-form";
 
-const personas = ["Todos", "Persona A", "Persona B", "Compartido"];
-const tipos = ["Todos", "Ingreso", "Gasto"];
+const MobileTransactionList = dynamic(
+  () =>
+    import("./transaction-mobile-list").then(
+      (mod) => mod.TransactionMobileList,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-xl border border-dashed border-white/60 bg-white/50 p-4 text-sm text-muted-foreground">
+        Preparando vista móvil...
+      </div>
+    ),
+  },
+);
+
+const personas = ["Todos", "Marcelo", "Ana", "Compartido"];
+const tipos = ["Todos", "Ingreso", "Gasto", "Deuda"];
 
 export function TransactionTable() {
   const { monthKey } = useDashboardStore();
-  const { data, isLoading, isError, error } = useTransactions(monthKey);
-  const [personaFilter, setPersonaFilter] = useState("Todos");
+  const { data, isLoading, isError, error, refetch } = useTransactions(monthKey);
   const [tipoFilter, setTipoFilter] = useState("Todos");
+  const [personaFilter, setPersonaFilter] = useState("Todos");
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(
     null,
   );
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const deleteMutation = useDeleteTransaction();
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -43,22 +61,48 @@ export function TransactionTable() {
     });
   }, [data, personaFilter, tipoFilter]);
 
+  const handleDelete = async (transaction: Transaction) => {
+    if (deletingId) return;
+    const confirmDelete = window.confirm(
+      "¿Seguro que deseas eliminar esta transacción?",
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setDeletingId(transaction.id);
+      await deleteMutation.mutateAsync(transaction.id);
+      toast.success("Transacción eliminada");
+    } catch (err) {
+      console.error("[transactions] delete", err);
+      toast.error("No pudimos eliminar la transacción");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
-    <div className="space-y-5 rounded-2xl border border-border/70 p-6">
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="glass-panel space-y-6 p-4 sm:p-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">
+          <h3 className="text-sm font-semibold text-foreground sm:text-base">
             Historial del mes
           </h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground sm:text-sm">
             Filtra por persona o tipo para revisar los detalles.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <button
+            onClick={() => refetch()}
+            className="w-full rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:text-primary sm:w-auto"
+          >
+            Refrescar
+          </button>
           <select
             value={personaFilter}
             onChange={(event) => setPersonaFilter(event.target.value)}
-            className="rounded-xl border border-border bg-background px-3 py-2 outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+            className="soft-input w-full sm:w-auto"
           >
             {personas.map((persona) => (
               <option key={persona}>{persona}</option>
@@ -67,7 +111,7 @@ export function TransactionTable() {
           <select
             value={tipoFilter}
             onChange={(event) => setTipoFilter(event.target.value)}
-            className="rounded-xl border border-border bg-background px-3 py-2 outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+            className="soft-input w-full sm:w-auto"
           >
             {tipos.map((tipo) => (
               <option key={tipo}>{tipo}</option>
@@ -77,8 +121,8 @@ export function TransactionTable() {
       </header>
 
       {isLoading && (
-        <div className="flex min-h-[260px] items-center justify-center rounded-xl border border-dashed border-border">
-          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/40 text-sm text-muted-foreground backdrop-blur">
+          <span className="flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             Cargando transacciones...
           </span>
@@ -86,7 +130,7 @@ export function TransactionTable() {
       )}
 
       {isError && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+        <div className="rounded-2xl border border-rose-200/70 bg-rose-100/70 px-4 py-3 text-sm text-rose-600">
           {error instanceof Error
             ? error.message
             : "Error al cargar las transacciones"}
@@ -94,56 +138,49 @@ export function TransactionTable() {
       )}
 
       {!isLoading && filtered.length === 0 && (
-        <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-dashed border-white/60 bg-white/40 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur">
           No hay transacciones que coincidan con los filtros seleccionados.
         </p>
       )}
 
       {!isLoading && filtered.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-border/70 text-xs uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="py-2 pr-4">Fecha</th>
-                <th className="py-2 pr-4">Categoría</th>
-                <th className="py-2 pr-4">Nota</th>
-                <th className="py-2 pr-4">Persona</th>
-                <th className="py-2 pr-4 text-right">Monto</th>
-                <th className="py-2 text-right">Método</th>
-                <th className="py-2 pl-4 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/70">
-              {filtered.map((transaction) => (
-                <Row
-                  key={transaction.id}
-                  transaction={transaction}
-                  onEdit={() => setEditingTransaction(transaction)}
-                  onDelete={async () => {
-                    if (deletingId) return;
-                    const confirmDelete = window.confirm(
-                      "¿Seguro que deseas eliminar esta transacción?",
-                    );
-
-                    if (!confirmDelete) return;
-
-                    try {
-                      setDeletingId(transaction.id);
-                      await deleteMutation.mutateAsync(transaction.id);
-                      toast.success("Transacción eliminada");
-                    } catch (err) {
-                      console.error("[transactions] delete", err);
-                      toast.error("No pudimos eliminar la transacción");
-                    } finally {
-                      setDeletingId(null);
-                    }
-                  }}
-                  isDeleting={deletingId === transaction.id}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {isMobile ? (
+            <MobileTransactionList
+              transactions={filtered}
+              deletingId={deletingId}
+              onEdit={(transaction) => setEditingTransaction(transaction)}
+              onDelete={handleDelete}
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-white/60 bg-white/40 text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
+                  <tr>
+                    <th className="py-3 pr-4 font-medium">Fecha</th>
+                    <th className="py-3 pr-4 font-medium">Categoría</th>
+                    <th className="py-3 pr-4 font-medium">Nota</th>
+                    <th className="py-3 pr-4 font-medium">Persona</th>
+                    <th className="py-3 pr-4 text-right font-medium">Monto</th>
+                    <th className="py-3 text-right font-medium">Método</th>
+                    <th className="py-3 pl-4 text-right font-medium">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/40">
+                  {filtered.map((transaction) => (
+                    <Row
+                      key={transaction.id}
+                      transaction={transaction}
+                      onEdit={() => setEditingTransaction(transaction)}
+                      onDelete={() => handleDelete(transaction)}
+                      isDeleting={deletingId === transaction.id}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
 
       {editingTransaction && (
@@ -170,48 +207,46 @@ function Row({
   const isIncome = transaction.tipo === "ingreso";
 
   return (
-    <tr className="transition hover:bg-muted/60">
-      <td className="whitespace-nowrap py-2 pr-4 text-xs text-muted-foreground">
+    <tr className="transition-colors hover:bg-white/30">
+      <td className="whitespace-nowrap py-3 pr-4 text-xs text-muted-foreground">
         {formatDate(transaction.date)}
       </td>
-      <td className="py-2 pr-4 font-medium text-foreground">
+      <td className="py-3 pr-4 font-medium text-foreground">
         {transaction.category}
       </td>
-      <td className="max-w-md truncate py-2 pr-4 text-xs text-muted-foreground">
+      <td className="max-w-md truncate py-3 pr-4 text-xs text-muted-foreground">
         {transaction.nota ?? "—"}
       </td>
-      <td className="py-2 pr-4 text-xs uppercase tracking-wide text-muted-foreground">
+      <td className="py-3 pr-4 text-xs uppercase tracking-wide text-muted-foreground">
         {transaction.persona}
       </td>
       <td
-        className={`py-2 pr-4 text-right font-semibold ${
-          isIncome ? "text-emerald-600" : "text-foreground"
-        }`}
+        className={`py-3 pr-4 text-right font-semibold ${isIncome ? "text-emerald-600" : "text-rose-500"}`}
       >
         {formatCurrency(transaction.monto)}
       </td>
-      <td className="py-2 text-right text-xs text-muted-foreground">
+      <td className="py-3 text-right text-xs text-muted-foreground">
         {transaction.metodo ?? "—"}
       </td>
-      <td className="py-2 pl-4 text-right">
+      <td className="py-3 pl-4 text-right">
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onEdit}
-            className="rounded-full border border-border p-2 text-muted-foreground transition hover:border-foreground/30 hover:text-foreground"
+            className="rounded-2xl border border-white/60 bg-white/70 p-1.5 text-muted-foreground shadow-sm transition hover:text-primary"
           >
-            <Pencil className="size-4" />
+            <Pencil className="size-3.5" />
           </button>
           <button
             type="button"
             onClick={onDelete}
             disabled={isDeleting}
-            className="rounded-full border border-border p-2 text-muted-foreground transition hover:border-rose-300 hover:text-rose-600 disabled:cursor-not-allowed"
+            className="rounded-2xl border border-white/60 bg-white/70 p-1.5 text-muted-foreground shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
           >
             {isDeleting ? (
-              <Loader2 className="size-4 animate-spin" />
+              <Loader2 className="size-3.5 animate-spin" />
             ) : (
-              <Trash2 className="size-4" />
+              <Trash2 className="size-3.5" />
             )}
           </button>
         </div>

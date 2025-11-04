@@ -11,6 +11,7 @@ import { useCreateBudget } from "@/hooks/use-budgets";
 import { formatMonthKey } from "@/lib/utils/date";
 
 import { budgetSchema, type BudgetFormValues } from "./schema";
+import { categoryOptions } from "../transactions/schema";
 
 export function BudgetForm() {
   const { monthKey } = useDashboardStore();
@@ -47,13 +48,16 @@ export function BudgetForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4 rounded-2xl border border-border/70 p-6"
+      className="glass-panel space-y-6 p-4 sm:p-6"
     >
-      <div>
-        <p className="text-sm font-semibold text-foreground">
+      <div className="space-y-1">
+        <p className="muted-label">
           Asignar presupuesto a {formatMonthKey(monthKey)}
         </p>
-        <p className="text-xs text-muted-foreground">
+        <h3 className="text-base font-semibold text-foreground">
+          Planifica el gasto del mes
+        </h3>
+        <p className="text-sm text-muted-foreground">
           Define cuánto planean gastar en cada categoría.
         </p>
       </div>
@@ -61,12 +65,17 @@ export function BudgetForm() {
 
       <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
         <Field label="Categoría" error={errors.category?.message}>
-          <input
-            type="text"
-            placeholder="Alimentación, Transporte, etc."
+          <select
             {...register("category")}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
-          />
+            className="soft-input"
+          >
+            <option value="">Selecciona una categoría</option>
+            {categoryOptions.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="Monto mensual" error={errors.amount?.message}>
           <input
@@ -74,7 +83,7 @@ export function BudgetForm() {
             step="0.01"
             placeholder="0.00"
             {...register("amount")}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+            className="soft-input"
           />
         </Field>
       </div>
@@ -82,7 +91,7 @@ export function BudgetForm() {
       <button
         type="submit"
         disabled={mutation.isPending}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-5 py-3 text-sm font-medium text-background transition hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-70"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
         Guardar presupuesto
@@ -102,7 +111,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-sm">
+    <label className="flex flex-col gap-2 text-sm">
       <span className="font-medium text-foreground">{label}</span>
       {children}
       {error && <span className="text-xs text-rose-500">{error}</span>}

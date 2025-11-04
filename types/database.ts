@@ -51,7 +51,7 @@ export interface Database {
           household_id: UUID;
           date: string;
           category: string;
-          tipo: "ingreso" | "gasto";
+          tipo: "ingreso" | "gasto" | "deuda";
           monto: number;
           persona: string;
           metodo: string | null;
@@ -63,7 +63,7 @@ export interface Database {
           household_id: UUID;
           date: string;
           category: string;
-          tipo: "ingreso" | "gasto";
+          tipo: "ingreso" | "gasto" | "deuda";
           monto: number;
           persona: string;
           metodo?: string | null;
@@ -75,7 +75,7 @@ export interface Database {
           household_id?: UUID;
           date?: string;
           category?: string;
-          tipo?: "ingreso" | "gasto";
+          tipo?: "ingreso" | "gasto" | "deuda";
           monto?: number;
           persona?: string;
           metodo?: string | null;
@@ -112,12 +112,13 @@ export interface Database {
       Relationships: [];
     };
     debts: {
-      Row: {
-        id: UUID;
+        Row: {
+          id: UUID;
           household_id: UUID;
           entity: string;
           balance: number;
           monthly_payment: number;
+          interest_rate: number | null;
           status: "activa" | "pagada" | "morosa";
           created_at: string | null;
         };
@@ -127,6 +128,7 @@ export interface Database {
           entity: string;
           balance: number;
           monthly_payment: number;
+          interest_rate?: number | null;
           status?: "activa" | "pagada" | "morosa";
           created_at?: string | null;
         };
@@ -136,6 +138,7 @@ export interface Database {
           entity?: string;
           balance?: number;
           monthly_payment?: number;
+          interest_rate?: number | null;
           status?: "activa" | "pagada" | "morosa";
           created_at?: string | null;
       };

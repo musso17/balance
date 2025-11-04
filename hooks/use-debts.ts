@@ -19,6 +19,7 @@ export interface CreateDebtInput {
   entity: string;
   balance: number;
   monthly_payment: number;
+  interest_rate?: number;
   status: "activa" | "pagada" | "morosa";
 }
 
@@ -93,6 +94,55 @@ export function useDeleteDebt() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["debts"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useActiveDebts() {
+  return useQuery<Debt[]>({
+    queryKey: ["active-debts"],
+    queryFn: async () => {
+      const response = await fetch("/api/debts/active");
+      if (!response.ok) {
+        throw new Error("No pudimos cargar las deudas activas");
+      }
+      return (await response.json()) as Debt[];
+    },
+  });
+}
+
+export interface DebtActionInput {
+  debt_id: string;
+  action: "pay_installment" | "amortize";
+  monto: number;
+  date: string;
+  persona: string;
+  metodo?: string | null;
+  nota?: string | null;
+}
+
+export function useDebtAction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: DebtActionInput) => {
+      const response = await fetch("/api/debts/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("No pudimos realizar la acción de deuda");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["debts"] });
+      void queryClient.invalidateQueries({ queryKey: ["active-debts"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      void queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
   });
 }

@@ -1,13 +1,18 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { useCreateTransaction } from "@/hooks/use-transactions";
+import { useActiveDebts, useDebtAction } from "@/hooks/use-debts";
+import { formatCurrencyNoDecimals } from "@/lib/utils/number";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 import {
+  categoryOptions,
   metodosOptions,
   personasOptions,
   transactionSchema,
@@ -16,10 +21,15 @@ import {
 
 export function TransactionForm() {
   const mutation = useCreateTransaction();
+  const debtActionMutation = useDebtAction();
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const {
     register,
     reset,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<TransactionFormValues>({
     resolver:
@@ -31,52 +41,167 @@ export function TransactionForm() {
     },
   });
 
+  const transactionType = watch("tipo");
+  const selectedDebtId = watch("debt_id");
+  const debtAction = watch("debt_action");
+  const { data: activeDebts, isLoading: isLoadingActiveDebts } = useActiveDebts();
+
+  const selectedDebt = useMemo(
+    () => activeDebts?.find((debt) => debt.id === selectedDebtId) ?? null,
+    [activeDebts, selectedDebtId],
+  );
+
+  const isDebtTransaction = transactionType === "deuda";
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsSheetOpen(false);
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (!isDebtTransaction) {
+      setValue("debt_id", undefined, { shouldValidate: true });
+      setValue("debt_action", undefined, { shouldValidate: true });
+      return;
+    }
+
+    if (selectedDebt) {
+      setValue("category", selectedDebt.entity, { shouldValidate: true });
+    } else {
+      setValue("category", "", { shouldValidate: true });
+    }
+  }, [isDebtTransaction, selectedDebt, setValue]);
+
+  useEffect(() => {
+    if (!isDebtTransaction || !selectedDebt) return;
+    if (debtAction === undefined) {
+      setValue("debt_action", "pay_installment");
+    }
+    if ((debtAction ?? "pay_installment") === "pay_installment") {
+      setValue("monto", selectedDebt.monthly_payment, { shouldValidate: true });
+    }
+  }, [isDebtTransaction, selectedDebt, debtAction, setValue]);
+
   const onSubmit = async (values: TransactionFormValues) => {
     try {
-      await mutation.mutateAsync({
-        ...values,
-        metodo: values.metodo ?? null,
-        nota: values.nota ?? null,
-      });
+      if (values.tipo === "deuda") {
+        if (!selectedDebt) {
+          toast.error("Selecciona una deuda activa.");
+          return;
+        }
+
+        const action = values.debt_action ?? "pay_installment";
+        const amount =
+          action === "pay_installment"
+            ? selectedDebt.monthly_payment
+            : values.monto;
+
+        await debtActionMutation.mutateAsync({
+          debt_id: selectedDebt.id,
+          action,
+          monto: amount,
+          date: values.date,
+          persona: values.persona,
+          metodo: values.metodo ?? null,
+          nota: values.nota ?? null,
+        });
+      } else {
+        const payload = {
+          ...values,
+          category: values.category ?? "",
+          metodo: values.metodo ?? null,
+          nota: values.nota ?? null,
+        };
+
+        await mutation.mutateAsync(payload);
+      }
 
       toast.success("Transacción registrada con éxito.");
       reset({
         date: values.date,
         category: "",
-        monto: undefined,
+        monto: 0,
         persona: values.persona,
         tipo: values.tipo,
         metodo: values.metodo,
+        debt_id: undefined,
+        debt_action: undefined,
         nota: "",
       });
+      if (isMobile) {
+        setIsSheetOpen(false);
+      }
     } catch (error) {
       console.error("[transactions] create", error);
       toast.error("No pudimos registrar la transacción.");
     }
   };
+  useEffect(() => {
+    if (!isMobile) return;
+    const originalOverflow = document.body.style.overflow;
+    if (isSheetOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+    document.body.style.overflow = originalOverflow;
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isMobile, isSheetOpen]);
 
-  return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-5 rounded-2xl border border-border/70 p-6"
-    >
+  const FormFields = () => (
+    <>
       <div className="grid gap-4 md:grid-cols-2">
+        <Field label="Tipo" error={errors.tipo?.message}>
+          <select
+            {...register("tipo")}
+            className="soft-input"
+          >
+            <option value="gasto">Gasto</option>
+            <option value="ingreso">Ingreso</option>
+            <option value="deuda">Deuda</option>
+          </select>
+        </Field>
+
         <Field label="Fecha" error={errors.date?.message}>
           <input
             type="date"
             {...register("date")}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+            className="soft-input"
           />
         </Field>
 
-        <Field label="Categoría" error={errors.category?.message}>
-          <input
-            type="text"
-            placeholder="Ej. Supermercado, Renta, Netflix..."
-            {...register("category")}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
-          />
-        </Field>
+        {transactionType !== "ingreso" && !isDebtTransaction && (
+          <Field label="Categoría" error={errors.category?.message}>
+            <select
+              {...register("category")}
+              className="soft-input"
+            >
+              <option value="">Selecciona una categoría</option>
+              {categoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+
+        {isDebtTransaction && (
+          <div className="md:col-span-2 rounded-2xl border border-white/50 bg-white/60 p-4 text-sm text-muted-foreground shadow-sm backdrop-blur">
+            <p className="text-sm font-semibold text-foreground">
+              {selectedDebt ? selectedDebt.entity : "Selecciona una deuda"}
+            </p>
+            {selectedDebt && (
+              <p className="text-xs">
+                Saldo actual {formatCurrencyNoDecimals(selectedDebt.balance)}
+              </p>
+            )}
+          </div>
+        )}
 
         <Field label="Monto" error={errors.monto?.message}>
           <input
@@ -84,14 +209,15 @@ export function TransactionForm() {
             step="0.01"
             placeholder="0.00"
             {...register("monto")}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+            className="soft-input"
+            readOnly={isDebtTransaction && (debtAction ?? "pay_installment") === "pay_installment"}
           />
         </Field>
 
         <Field label="Persona" error={errors.persona?.message}>
           <select
             {...register("persona")}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+            className="soft-input"
           >
             <option value="">Selecciona</option>
             {personasOptions.map((item) => (
@@ -102,29 +228,51 @@ export function TransactionForm() {
           </select>
         </Field>
 
-        <Field label="Tipo" error={errors.tipo?.message}>
-          <select
-            {...register("tipo")}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
-          >
-            <option value="gasto">Gasto</option>
-            <option value="ingreso">Ingreso</option>
-          </select>
-        </Field>
+        {isDebtTransaction && (
+          <Field label="Deuda" error={errors.debt_id?.message}>
+            <select
+              {...register("debt_id")}
+              className="soft-input"
+              disabled={isLoadingActiveDebts}
+            >
+              <option value="">Selecciona una deuda</option>
+              {activeDebts?.map((debt) => (
+                <option key={debt.id} value={debt.id}>
+                  {debt.entity} · {formatCurrencyNoDecimals(debt.balance)}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
-        <Field label="Método de pago" error={errors.metodo?.message}>
-          <select
-            {...register("metodo")}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
-          >
-            <option value="">Selecciona</option>
-            {metodosOptions.map((metodo) => (
-              <option key={metodo} value={metodo}>
-                {metodo}
-              </option>
-            ))}
-          </select>
-        </Field>
+        {isDebtTransaction && selectedDebt && (
+          <Field label="Acción" error={errors.debt_action?.message}>
+            <select
+              {...register("debt_action")}
+              className="soft-input"
+            >
+              <option value="">Selecciona una acción</option>
+              <option value="pay_installment">Pagar cuota</option>
+              <option value="amortize">Amortizar</option>
+            </select>
+          </Field>
+        )}
+
+        {transactionType !== "ingreso" && (
+          <Field label="Método de pago" error={errors.metodo?.message}>
+            <select
+              {...register("metodo")}
+              className="soft-input"
+            >
+              <option value="">Selecciona</option>
+              {metodosOptions.map((metodo) => (
+                <option key={metodo} value={metodo}>
+                  {metodo}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
       </div>
 
       <Field label="Nota" error={errors.nota?.message}>
@@ -132,18 +280,94 @@ export function TransactionForm() {
           rows={3}
           placeholder="Contexto, acuerdos o recordatorios"
           {...register("nota")}
-          className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/20"
+          className="soft-input"
         />
       </Field>
+    </>
+  );
 
-      <button
-        type="submit"
-        disabled={mutation.isPending}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-5 py-3 text-sm font-medium text-background transition hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
-        Registrar transacción
-      </button>
+  const submitButton = (
+    <button
+      type="submit"
+      disabled={mutation.isPending || debtActionMutation.isPending}
+      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+    >
+      {(mutation.isPending || debtActionMutation.isPending) && (
+        <Loader2 className="size-4 animate-spin" />
+      )}
+      Registrar transacción
+    </button>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="glass-panel space-y-3 p-4">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-foreground">
+              Añadir transacción
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Registra gastos, ingresos o movimientos de deuda en segundos.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsSheetOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90"
+          >
+            Registrar transacción
+          </button>
+        </div>
+
+        {isSheetOpen && (
+          <div
+            className="fixed inset-0 z-50 flex bg-slate-900/50 backdrop-blur-sm"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                setIsSheetOpen(false);
+              }
+            }}
+          >
+            <div className="relative flex h-full w-full flex-col overflow-hidden rounded-none border border-white/30 bg-white/95">
+              <div className="flex items-center justify-between border-b border-white/60 px-5 py-4">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">
+                    Nueva transacción
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Completa los datos para agregarla al registro.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSheetOpen(false)}
+                  className="rounded-2xl border border-white/60 bg-white/70 p-2 text-muted-foreground shadow-sm transition hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="flex h-full flex-col gap-6 overflow-y-auto px-5 py-6"
+              >
+                <FormFields />
+                {submitButton}
+              </form>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="glass-panel space-y-6 p-4 sm:p-6"
+    >
+      <FormFields />
+      {submitButton}
     </form>
   );
 }
@@ -158,11 +382,10 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-sm">
+    <label className="flex flex-col gap-2 text-sm">
       <span className="font-medium text-foreground">{label}</span>
       {children}
       {error && <span className="text-xs text-rose-500">{error}</span>}
     </label>
   );
 }
-

@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { monthKeyFromDate } from "@/lib/utils/date";
+
 type PersonaFilter = "todos" | "pareja" | "persona_1" | "persona_2";
 
 export interface DashboardFilters {
@@ -18,12 +20,12 @@ interface DashboardStore extends DashboardFilters {
   reset: () => void;
 }
 
-const currentMonthKey = new Date().toISOString().slice(0, 7);
+const getCurrentMonthKey = () => monthKeyFromDate(new Date());
 
 export const useDashboardStore = create<DashboardStore>()(
   persist(
     (set) => ({
-      monthKey: currentMonthKey,
+      monthKey: getCurrentMonthKey(),
       persona: "todos",
       category: null,
       showDebtImpact: true,
@@ -34,20 +36,18 @@ export const useDashboardStore = create<DashboardStore>()(
         set((state) => ({ showDebtImpact: !state.showDebtImpact })),
       reset: () =>
         set({
-          monthKey: currentMonthKey,
+          monthKey: getCurrentMonthKey(),
           persona: "todos",
           category: null,
           showDebtImpact: true,
         }),
     }),
     {
-      name: "dashboard-preferences",
+      name: "dashboard-preferences-v2",
       partialize: (state) => ({
-        monthKey: state.monthKey,
         persona: state.persona,
         showDebtImpact: state.showDebtImpact,
       }),
     },
   ),
 );
-
