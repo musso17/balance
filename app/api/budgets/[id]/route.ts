@@ -21,10 +21,18 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const payload = (await request.json()) as Tables["budgets"]["Update"];
-  const { household_id: _householdToIgnore, id: _idToIgnore, ...rest } = payload;
-  void _householdToIgnore;
-  void _idToIgnore;
-  const updatePayload = rest as Tables["budgets"]["Update"];
+  const { household_id: _ignoredHousehold, id: _ignoredId, ...rest } = payload;
+  void _ignoredHousehold;
+  void _ignoredId;
+
+  const updatePayload = Object.fromEntries(
+    Object.entries({
+      month_key: rest.month_key,
+      category: rest.category,
+      amount: rest.amount,
+      created_at: rest.created_at ?? undefined,
+    }).filter(([, value]) => value !== undefined),
+  ) as Tables["budgets"]["Update"];
 
   const { data, error } = await supabase
     .from("budgets")
