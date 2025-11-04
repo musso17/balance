@@ -85,7 +85,7 @@ export function TransactionImport() {
       if (result.imported > 0) {
         toast.success(`${result.imported} transacciones importadas correctamente.`);
       } else {
-        toast.info("No se importaron nuevas transacciones.");
+        toast("No se importaron nuevas transacciones.");
       }
     } catch (err) {
       console.error("[transactions] import", err);
