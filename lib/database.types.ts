@@ -56,6 +56,7 @@ export type Database = {
           entity: string
           household_id: string
           id: string
+          interest_rate: number | null
           monthly_payment: number
           status: string
         }
@@ -65,6 +66,7 @@ export type Database = {
           entity: string
           household_id: string
           id?: string
+          interest_rate?: number | null
           monthly_payment: number
           status?: string
         }
@@ -74,6 +76,7 @@ export type Database = {
           entity?: string
           household_id?: string
           id?: string
+          interest_rate?: number | null
           monthly_payment?: number
           status?: string
         }
