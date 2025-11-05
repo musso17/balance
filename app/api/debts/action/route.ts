@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesUpdate, TablesInsert } from "@/lib/database.types";
 
 import {
