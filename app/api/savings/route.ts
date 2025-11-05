@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
+import type { TablesInsert } from "@/lib/database.types";
 
 
 export async function GET() {
