@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { Budget } from "@/types/database";
+import type { Budget } from "@/lib/database.types";
 
 export function useBudgets(monthKey?: string) {
   return useQuery<Budget[]>({

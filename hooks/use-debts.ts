@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { Debt } from "@/types/database";
+import type { Debt } from "@/lib/database.types";
 
 export function useDebts() {
   return useQuery<Debt[]>({

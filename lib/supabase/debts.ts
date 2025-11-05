@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "./household";
-import type { Debt } from "@/types/database";
+import type { Debt } from "@/lib/database.types";
 
 export async function getActiveDebts(): Promise<Debt[]> {
   const supabase = createSupabaseServerClient();

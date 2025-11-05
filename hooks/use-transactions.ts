@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { Transaction } from "@/types/database";
+import type { Transaction } from "@/lib/database.types";
 
 export function useTransactions(monthKey?: string) {
   return useQuery<Transaction[]>({

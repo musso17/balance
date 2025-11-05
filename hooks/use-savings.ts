@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { SavingGoal } from "@/types/database";
+import type { SavingGoal } from "@/lib/database.types";
 
 export function useSavings() {
   return useQuery<SavingGoal[]>({

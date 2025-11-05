@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
-import type { Tables } from "@/types/database";
+import type { Tables } from "@/lib/database.types";
 
 interface RouteContext {
   params: Promise<{ id: string }>;

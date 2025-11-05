@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/supabase/auth";
 import { getHouseholdId } from "@/lib/supabase/household"; // Asegúrate que esta ruta es correcta
-import type { Tables } from "@/types/database";
+import type { Tables } from "@/lib/database.types";
 
 // This comment is added to trigger a re-evaluation by Next.js build system.
 

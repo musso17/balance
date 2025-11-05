@@ -7,7 +7,7 @@ import type {
   Debt,
   SavingGoal,
   Transaction,
-} from "@/types/database";
+} from "@/lib/database.types";
 import { calculateBalance } from "@/lib/utils/number";
 
 export interface DashboardData {

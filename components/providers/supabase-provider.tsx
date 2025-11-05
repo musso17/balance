@@ -4,7 +4,7 @@ import { ReactNode, createContext, useContext, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/database";
+import type { Database } from "@/lib/database.types";
 
 type SupabaseContextValue = SupabaseClient<Database>;
 

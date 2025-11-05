@@ -1,4 +1,4 @@
-import type { Transaction } from "@/types/database";
+import type { Transaction } from "@/lib/database.types";
 
 export const mockTransactions: Transaction[] = [
   {

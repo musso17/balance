@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "./server";
 
-import type { UserProfile } from "@/types/database";
+import type { UserProfile } from "@/lib/database.types";
 
 export async function getServerSession() {
   const supabase = createSupabaseServerClient();

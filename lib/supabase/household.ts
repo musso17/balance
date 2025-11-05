@@ -1,6 +1,6 @@
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "./server";
 import { getCurrentUserProfile, getServerSession } from "./auth";
-import type { Household } from "@/types/database";
+import type { Household } from "@/lib/database.types";
 
 async function createHouseholdForUser(): Promise<string | null> {
   const session = await getServerSession();

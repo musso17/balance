@@ -1,4 +1,4 @@
-import type { SavingGoal } from "@/types/database";
+import type { SavingGoal } from "@/lib/database.types";
 
 export const mockSavings: SavingGoal[] = [
   {
