@@ -58,7 +58,7 @@ export type Database = {
           id: string
           interest_rate: number | null
           monthly_payment: number
-          status: string
+          status: Database["public"]["Enums"]["debt_status"]
         }
         Insert: {
           balance: number
@@ -68,7 +68,7 @@ export type Database = {
           id?: string
           interest_rate?: number | null
           monthly_payment: number
-          status?: string
+          status?: Database["public"]["Enums"]["debt_status"]
         }
         Update: {
           balance?: number
@@ -78,7 +78,7 @@ export type Database = {
           id?: string
           interest_rate?: number | null
           monthly_payment?: number
-          status?: string
+          status?: Database["public"]["Enums"]["debt_status"]
         }
         Relationships: [
           {
