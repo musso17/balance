@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
-import type { Tables } from "@/lib/database.types";
+
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -20,11 +20,11 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
-  const payload = (await request.json()) as Tables["transactions"]["Update"];
+  const payload = (await request.json()) as TablesUpdate<'transactions'>;
   const { household_id: _householdToIgnore, id: _idToIgnore, ...rest } = payload;
   void _householdToIgnore;
   void _idToIgnore;
-  const updatePayload = rest as Tables["transactions"]["Update"];
+  const updatePayload = rest as TablesUpdate<'transactions'>;
 
   const { data, error } = await supabase
     .from("transactions")

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getHouseholdId } from "@/lib/supabase/household";
-import type { Tables } from "@/lib/database.types";
+import type { TablesUpdate, TablesInsert } from "@/lib/database.types";
+
 import {
   accrueMonthlyInterest,
   calculateMonthlyPayment,
@@ -108,14 +108,14 @@ export async function POST(request: Request) {
     }
   }
 
-  let newStatus: Tables["debts"]["Update"]["status"] = debt.status;
+  let newStatus: TablesUpdate<'debts'>['status'] = debt.status;
   if (newBalance <= 0.01) {
     newBalance = 0;
     updatedMonthlyPayment = 0;
     newStatus = "pagada";
   }
 
-  const updatePayload: Tables["debts"]["Update"] = {
+  const updatePayload: TablesUpdate<'debts'> = {
     balance: roundCurrency(newBalance),
   };
 
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
   }
 
   // Create a transaction record for the debt payment
-  const transactionPayload: Tables["transactions"]["Insert"] = {
+  const transactionPayload: TablesInsert<'transactions'> = {
     household_id: householdId,
     monto: roundCurrency(amount),
     tipo: "deuda",

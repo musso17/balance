@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
-import type { Tables } from "@/lib/database.types";
+
 
 export const revalidate = 0;
 
@@ -68,11 +68,11 @@ export async function POST(request: Request) {
   }
 
   const payload = (await request.json()) as Pick<
-    Tables["transactions"]["Insert"],
+    TablesInsert<'transactions'>,
     "date" | "category" | "monto" | "persona" | "tipo" | "nota" | "metodo"
   >;
 
-  const insertPayload: Tables["transactions"]["Insert"] = {
+  const insertPayload: TablesInsert<'transactions'> = {
     ...payload,
     household_id: householdId,
   };

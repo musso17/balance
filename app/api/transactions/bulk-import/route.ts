@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/supabase/auth";
 import { getHouseholdId } from "@/lib/supabase/household"; // Asegúrate que esta ruta es correcta
-import type { Tables } from "@/lib/database.types";
+
 
 // This comment is added to trigger a re-evaluation by Next.js build system.
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const transactions = Array.isArray(body?.transactions)
     ? (body.transactions as Array<
         Pick<
-          Tables["transactions"]["Insert"],
+          TablesInsert<'transactions'>,
           "date" | "category" | "monto" | "persona" | "tipo" | "nota" | "metodo"
         >
       >)
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       ({
         ...item,
         household_id: householdId,
-      } as Tables["transactions"]["Insert"]),
+      } as TablesInsert<'transactions'>),
   );
 
   const { data, error } = await supabase
