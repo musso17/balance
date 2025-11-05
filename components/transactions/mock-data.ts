@@ -2,6 +2,18 @@ import type { Tables } from "@/lib/database.types";
 
 export const mockTransactions: Tables<'transactions'>[] = [
   {
+    id: "income-1",
+    household_id: "",
+    date: "2025-11-01",
+    category: "Salarios",
+    tipo: "ingreso",
+    monto: 12500,
+    persona: "Compartido",
+    metodo: null,
+    nota: "Ingreso combinado Marcelo & Ana",
+    created_at: new Date().toISOString(),
+  },
+  {
     id: "1",
     household_id: "",
     date: "2025-11-04",

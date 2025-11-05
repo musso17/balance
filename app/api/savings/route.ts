@@ -1,19 +1,16 @@
 import { NextResponse } from "next/server";
 
+import { mockSavings } from "@/components/savings/mock-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesInsert } from "@/lib/database.types";
-
 
 export async function GET() {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
 
   if (!householdId) {
-    return NextResponse.json(
-      { error: "No se encontró el hogar" },
-      { status: 400 },
-    );
+    return NextResponse.json(mockSavings);
   }
 
   const { data, error } = await supabase
