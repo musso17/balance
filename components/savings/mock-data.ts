@@ -1,6 +1,6 @@
-import type { SavingGoal } from "@/lib/database.types";
+import type { Tables } from "@/lib/database.types";
 
-export const mockSavings: SavingGoal[] = [
+export const mockSavings: Tables<'savings'>[] = [
   {
     id: "1",
     goal_name: "Fondo emergencia",

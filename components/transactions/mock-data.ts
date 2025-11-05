@@ -1,6 +1,6 @@
-import type { Transaction } from "@/lib/database.types";
+import type { Tables } from "@/lib/database.types";
 
-export const mockTransactions: Transaction[] = [
+export const mockTransactions: Tables<'transactions'>[] = [
   {
     id: "1",
     household_id: "",

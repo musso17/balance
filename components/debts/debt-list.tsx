@@ -12,7 +12,7 @@ import {
   useUpdateDebt,
 } from "@/hooks/use-debts";
 import { formatCurrency } from "@/lib/utils/number";
-import type { Debt } from "@/types/database";
+import type { Tables } from "@/lib/database.types";
 
 import { debtSchema, type DebtFormValues } from "./schema";
 
@@ -68,7 +68,7 @@ export function DebtList() {
   );
 }
 
-function DebtRowItem({ debt }: { debt: Debt }) {
+function DebtRowItem({ debt }: { debt: Tables<'debts'> }) {
   const [isEditing, setIsEditing] = useState(false);
   const updateMutation = useUpdateDebt();
   const deleteMutation = useDeleteDebt();

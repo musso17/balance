@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { Budget } from "@/lib/database.types";
+import type { Tables, TablesInsert, TablesUpdate } from "@/lib/database.types";
 
 export function useBudgets(monthKey?: string) {
-  return useQuery<Budget[]>({
+  return useQuery<Tables<'budgets'>[]>({
     queryKey: ["budgets", monthKey],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -12,7 +12,7 @@ export function useBudgets(monthKey?: string) {
       if (!response.ok) {
         throw new Error("No pudimos cargar los presupuestos");
       }
-      return (await response.json()) as Budget[];
+      return (await response.json()) as Tables<'budgets'>[];
     },
   });
 }
@@ -23,8 +23,7 @@ export interface CreateBudgetInput {
   amount: number;
 }
 
-export interface UpdateBudgetInput
-  extends Partial<CreateBudgetInput> {
+export interface UpdateBudgetInput extends TablesUpdate<'budgets'> {
   id: string;
   month_key: string;
 }
@@ -39,14 +38,13 @@ export function useCreateBudget() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload satisfies Pick<TablesInsert<'budgets'>, "month_key" | "category" | "amount">),
       });
 
       if (!response.ok) {
         throw new Error("No pudimos guardar el presupuesto");
       }
-
-      return (await response.json()) as Budget;
+      return (await response.json()) as Tables<'budgets'>;
     },
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["budgets"] });
@@ -74,7 +72,7 @@ export function useUpdateBudget() {
         throw new Error("No pudimos actualizar el presupuesto");
       }
 
-      return (await response.json()) as Budget;
+      return (await response.json()) as Tables<'budgets'>;
     },
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["budgets"] });

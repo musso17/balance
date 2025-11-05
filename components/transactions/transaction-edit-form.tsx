@@ -7,7 +7,7 @@ import { Loader2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { useUpdateTransaction } from "@/hooks/use-transactions";
-import type { Transaction } from "@/types/database";
+import type { Tables } from "@/lib/database.types";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 import {
@@ -19,7 +19,7 @@ import {
 } from "./schema";
 
 interface TransactionEditFormProps {
-  transaction: Transaction | null;
+  transaction: Tables<'transactions'> | null;
   onClose: () => void;
 }
 
@@ -43,7 +43,7 @@ export function TransactionEditForm({ transaction, onClose }: TransactionEditFor
         category: transaction.category as typeof categoryOptions[number],
         monto: transaction.monto,
         persona: transaction.persona,
-        tipo: transaction.tipo,
+        tipo: transaction.tipo as "ingreso" | "gasto" | "deuda",
         metodo: transaction.metodo ?? "",
         nota: transaction.nota ?? "",
       });

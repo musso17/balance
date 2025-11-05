@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { Transaction } from "@/lib/database.types";
+import type { Tables, TablesUpdate } from "@/lib/database.types";
 
 export function useTransactions(monthKey?: string) {
-  return useQuery<Transaction[]>({
+  return useQuery<Tables<'transactions'>[]>({
     queryKey: ["transactions", monthKey],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -12,7 +12,7 @@ export function useTransactions(monthKey?: string) {
       if (!response.ok) {
         throw new Error("No pudimos cargar las transacciones");
       }
-      return (await response.json()) as Transaction[];
+      return (await response.json()) as Tables<'transactions'>[];
     },
   });
 }
@@ -30,8 +30,7 @@ export interface CreateTransactionInput {
   metodo?: string | null;
 }
 
-export interface UpdateTransactionInput
-  extends Partial<CreateTransactionInput> {
+export interface UpdateTransactionInput extends TablesUpdate<'transactions'> {
   id: string;
 }
 
@@ -46,11 +45,7 @@ export function useCreateTransaction() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error("No pudimos guardar la transacción");
-      }
-
-      return (await response.json()) as Transaction;
+      return (await response.json()) as Tables<'transactions'>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -74,7 +69,7 @@ export function useUpdateTransaction() {
         throw new Error("No pudimos actualizar la transacción");
       }
 
-      return (await response.json()) as Transaction;
+      return (await response.json()) as Tables<'transactions'>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["transactions"] });

@@ -365,3 +365,10 @@ export const Constants = {
     },
   },
 } as const
+
+export type Household = Tables<"households">
+export type UserProfile = Tables<"user_profiles">
+export type Transaction = Tables<"transactions">
+export type Budget = Tables<"budgets">
+export type Debt = Tables<"debts">
+export type SavingGoal = Tables<"savings">

@@ -5,8 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   Budget,
   Debt,
-  SavingGoal,
-  Transaction,
+  Tables,
 } from "@/lib/database.types";
 import { calculateBalance } from "@/lib/utils/number";
 
@@ -23,10 +22,10 @@ export interface DashboardData {
     expense: number;
     budget?: number;
   }>;
-  transactions: Transaction[];
+  transactions: Tables<'transactions'>[];
   budgets: Budget[];
   debts: Debt[];
-  savings: SavingGoal[];
+  savings: Tables<'savings'>[];
 }
 
 export async function getDashboardData(monthKey: string): Promise<DashboardData> {
@@ -69,10 +68,10 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
   if (debtsError) throw debtsError;
   if (savingsError) throw savingsError;
 
-  const transactionList = (transactions ?? []) as Transaction[];
+  const transactionList = (transactions ?? []) as Tables<'transactions'>[];
   const budgetList = (budgets ?? []) as Budget[];
   const debtList = (debts ?? []) as Debt[];
-  const savingsList = (savings ?? []) as SavingGoal[];
+  const savingsList = (savings ?? []) as Tables<'savings'>[];
 
   const incomes = transactionList.filter((item) => item.tipo === "ingreso");
   const expenses = transactionList.filter(
@@ -111,7 +110,7 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
     savingsList.length > 0
       ? savingsList.reduce((acc, goal) => {
           const progress = goal.target_amount
-            ? goal.current_amount / goal.target_amount
+            ? (goal.current_amount ?? 0) / goal.target_amount
             : 0;
           return acc + progress;
         }, 0) / savings.length

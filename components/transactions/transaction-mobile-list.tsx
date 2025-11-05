@@ -4,12 +4,12 @@ import { Loader2, Pencil, Trash2 } from "lucide-react";
 
 import { formatCurrency } from "@/lib/utils/number";
 import { formatDate } from "@/lib/utils/date";
-import type { Transaction } from "@/types/database";
+import type { Tables } from "@/lib/database.types";
 
 interface TransactionMobileListProps {
-  transactions: Transaction[];
-  onEdit: (transaction: Transaction) => void;
-  onDelete: (transaction: Transaction) => void;
+  transactions: Tables<'transactions'>[];
+  onEdit: (transaction: Tables<'transactions'>) => void;
+  onDelete: (transaction: Tables<'transactions'>) => void;
   deletingId: string | null;
 }
 

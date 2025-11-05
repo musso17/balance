@@ -17,11 +17,11 @@ import { formatDate } from "@/lib/utils/date";
 
 import { savingSchema, type SavingFormValues } from "./schema";
 import { mockSavings } from "./mock-data";
-import type { SavingGoal } from "@/types/database";
+import type { Tables } from "@/lib/database.types";
 
 export function SavingList() {
   // const { data, isLoading, isError, error } = useSavings();
-  const data = mockSavings as SavingGoal[];
+  const data = mockSavings as Tables<'savings'>[];
   const isLoading = false;
   const isError = false as boolean;
   const error = null as Error | null;
@@ -71,7 +71,7 @@ export function SavingList() {
   );
 }
 
-function SavingRowItem({ goal }: { goal: SavingGoal }) {
+function SavingRowItem({ goal }: { goal: Tables<'savings'> }) {
   const [isEditing, setIsEditing] = useState(false);
   const updateMutation = useUpdateSaving();
   const deleteMutation = useDeleteSaving();
@@ -86,7 +86,7 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
     defaultValues: {
       goal_name: goal.goal_name,
       target_amount: goal.target_amount,
-      current_amount: goal.current_amount,
+      current_amount: goal.current_amount ?? 0,
       deadline: goal.deadline ?? null,
     },
   });
@@ -95,7 +95,7 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
     reset({
       goal_name: goal.goal_name,
       target_amount: goal.target_amount,
-      current_amount: goal.current_amount,
+      current_amount: goal.current_amount ?? 0,
       deadline: goal.deadline ?? null,
     });
   }, [goal, reset]);
@@ -131,7 +131,7 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
   };
 
   const progress = goal.target_amount
-    ? Math.min(goal.current_amount / goal.target_amount, 1)
+    ? Math.min((goal.current_amount ?? 0) / goal.target_amount, 1)
     : 0;
   const percent = Math.round(progress * 100);
   const isComplete = percent >= 100;
@@ -210,7 +210,7 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
                 reset({
                   goal_name: goal.goal_name,
                   target_amount: goal.target_amount,
-                  current_amount: goal.current_amount,
+                  current_amount: goal.current_amount ?? 0,
                   deadline: goal.deadline ?? null,
                 });
                 setIsEditing(false);
@@ -237,7 +237,7 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
             <div className="text-right">
               <p className="muted-label">Acumulado</p>
               <p className="text-base font-semibold text-foreground">
-                {formatCurrency(goal.current_amount)}
+                {formatCurrency(goal.current_amount ?? 0)}
               </p>
               <p className="text-xs text-muted-foreground">
                 de {formatCurrency(goal.target_amount)}
@@ -269,7 +269,7 @@ function SavingRowItem({ goal }: { goal: SavingGoal }) {
       )}
       <div className="space-y-2">
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{formatCurrency(goal.current_amount)} de {formatCurrency(goal.target_amount)}</span>
+          <span>{formatCurrency(goal.current_amount ?? 0)} de {formatCurrency(goal.target_amount)}</span>
           <span>{percent}%</span>
         </div>
         <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">

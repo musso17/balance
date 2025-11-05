@@ -7,7 +7,7 @@ import { useDashboardStore } from "@/store/dashboard-store";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { formatCurrencyNoDecimals } from "@/lib/utils/number";
 import { formatDate, formatMonthKey } from "@/lib/utils/date";
-import type { Transaction } from "@/types/database";
+import type { Tables } from "@/lib/database.types";
 
 export function DashboardView() {
   const { monthKey, setMonthKey } = useDashboardStore();
@@ -222,7 +222,7 @@ function MetricCard({
   );
 }
 
-function TransactionItem({ data }: { data: Transaction }) {
+function TransactionItem({ data }: { data: Tables<'transactions'> }) {
   return (
     <article className="subdued-card flex flex-col gap-3 px-4 py-3 transition hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
       <div className="space-y-1">

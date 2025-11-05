@@ -12,7 +12,7 @@ import {
 } from "@/hooks/use-transactions";
 import { formatCurrency } from "@/lib/utils/number";
 import { formatDate } from "@/lib/utils/date";
-import type { Transaction } from "@/types/database";
+import type { Tables } from "@/lib/database.types";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 import { TransactionEditForm } from "./transaction-edit-form";
@@ -40,7 +40,7 @@ export function TransactionTable() {
   const { data, isLoading, isError, error, refetch } = useTransactions(monthKey);
   const [tipoFilter, setTipoFilter] = useState("Todos");
   const [personaFilter, setPersonaFilter] = useState("Todos");
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(
+  const [editingTransaction, setEditingTransaction] = useState<Tables<'transactions'> | null>(
     null,
   );
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export function TransactionTable() {
     });
   }, [data, personaFilter, tipoFilter]);
 
-  const handleDelete = async (transaction: Transaction) => {
+  const handleDelete = async (transaction: Tables<'transactions'>) => {
     if (deletingId) return;
     const confirmDelete = window.confirm(
       "¿Seguro que deseas eliminar esta transacción?",
@@ -199,7 +199,7 @@ function Row({
   onDelete,
   isDeleting,
 }: {
-  transaction: Transaction;
+  transaction: Tables<'transactions'>;
   onEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;

@@ -1,16 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { SavingGoal } from "@/lib/database.types";
+import type { Tables, SavingGoal } from "@/lib/database.types";
 
 export function useSavings() {
-  return useQuery<SavingGoal[]>({
+  return useQuery<Tables<'savings'>[]>({
     queryKey: ["savings"],
     queryFn: async () => {
       const response = await fetch("/api/savings");
       if (!response.ok) {
         throw new Error("No pudimos cargar las metas de ahorro");
       }
-      return (await response.json()) as SavingGoal[];
+      return (await response.json()) as Tables<'savings'>[];
     },
   });
 }
@@ -42,7 +42,7 @@ export function useCreateSaving() {
         throw new Error("No pudimos guardar la meta de ahorro");
       }
 
-      return (await response.json()) as SavingGoal;
+      return (await response.json()) as Tables<'savings'>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["savings"] });
