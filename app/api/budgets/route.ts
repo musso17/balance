@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { mockBudgets } from "@/components/budgets/mock-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
-import type { Tables, TablesInsert } from "@/lib/database.types";
+import type { TablesInsert } from "@/lib/database.types";
+import { addDemoBudget, getDemoBudgets } from "@/lib/mocks/store";
 
 export async function GET(request: Request) {
   const supabase = createSupabaseServerClient();
@@ -14,23 +14,7 @@ export async function GET(request: Request) {
     searchParams.get("monthKey") ?? new Date().toISOString().slice(0, 7);
 
   if (!householdId) {
-    const availableMonths = Object.keys(mockBudgets);
-    const safeMonth =
-      (monthKey && Object.prototype.hasOwnProperty.call(mockBudgets, monthKey)
-        ? monthKey
-        : undefined) ??
-      (availableMonths.length > 0 ? availableMonths[0] : undefined);
-    const fallback = safeMonth
-      ? [...(mockBudgets[safeMonth as keyof typeof mockBudgets] ?? [])]
-      : [];
-    const enriched = fallback.map((item, index) => ({
-      ...item,
-      household_id: "",
-      created_at: new Date(
-        `${(safeMonth ?? monthKey) ?? "2025-11"}-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`,
-      ).toISOString(),
-    })) as Tables<"budgets">[];
-    return NextResponse.json(enriched);
+    return NextResponse.json(getDemoBudgets(monthKey));
   }
 
   let query = supabase
@@ -55,17 +39,15 @@ export async function POST(request: Request) {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
 
-  if (!householdId) {
-    return NextResponse.json(
-      { error: "No se encontró el hogar" },
-      { status: 400 },
-    );
-  }
-
   const payload = (await request.json()) as Pick<
     TablesInsert<'budgets'>,
     "month_key" | "category" | "amount"
   >;
+
+  if (!householdId) {
+    const demoBudget = addDemoBudget(payload);
+    return NextResponse.json(demoBudget, { status: 201 });
+  }
 
   const insertPayload: TablesInsert<'budgets'> = {
     ...payload,

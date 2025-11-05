@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesUpdate, TablesInsert } from "@/lib/database.types";
+import { performDemoDebtAction } from "@/lib/mocks/store";
 
 import {
   accrueMonthlyInterest,
@@ -14,13 +15,6 @@ import {
 export async function POST(request: Request) {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
-
-  if (!householdId) {
-    return NextResponse.json(
-      { error: "No se encontró el hogar" },
-      { status: 400 },
-    );
-  }
 
   const {
     debt_id,
@@ -39,6 +33,34 @@ export async function POST(request: Request) {
     metodo?: string | null;
     nota?: string | null;
   };
+
+  if (!householdId) {
+    try {
+      const result = performDemoDebtAction({
+        debt_id,
+        action,
+        monto,
+        date,
+        persona,
+        metodo,
+        nota,
+      });
+
+      return NextResponse.json(
+        {
+          message: "Acción de deuda realizada con éxito",
+          debt: result.debt,
+          transaction: result.transaction,
+        },
+        { status: 200 },
+      );
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "No se pudo procesar la acción demo" },
+        { status: 400 },
+      );
+    }
+  }
 
   if (!debt_id || !action || monto === undefined || !date || !persona) {
     return NextResponse.json(

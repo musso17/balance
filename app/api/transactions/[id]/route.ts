@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesUpdate } from "@/lib/database.types";
+import { deleteDemoTransaction, updateDemoTransaction } from "@/lib/mocks/store";
 
 
 interface RouteContext {
@@ -14,18 +15,19 @@ export async function PATCH(request: Request, context: RouteContext) {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
 
-  if (!householdId) {
-    return NextResponse.json(
-      { error: "No se encontró el hogar" },
-      { status: 400 },
-    );
-  }
-
   const payload = (await request.json()) as TablesUpdate<'transactions'>;
   const { household_id: _householdToIgnore, id: _idToIgnore, ...rest } = payload;
   void _householdToIgnore;
   void _idToIgnore;
   const updatePayload = rest as TablesUpdate<'transactions'>;
+
+  if (!householdId) {
+    const updated = updateDemoTransaction(id, updatePayload);
+    if (!updated) {
+      return NextResponse.json({ error: "Transacción no encontrada" }, { status: 404 });
+    }
+    return NextResponse.json(updated);
+  }
 
   const { data, error } = await supabase
     .from("transactions")
@@ -48,10 +50,11 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const householdId = await getHouseholdId();
 
   if (!householdId) {
-    return NextResponse.json(
-      { error: "No se encontró el hogar" },
-      { status: 400 },
-    );
+    const removed = deleteDemoTransaction(id);
+    if (!removed) {
+      return NextResponse.json({ error: "Transacción no encontrada" }, { status: 404 });
+    }
+    return NextResponse.json({ success: true });
   }
 
   const { error } = await supabase

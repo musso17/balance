@@ -1,9 +1,10 @@
 import type { Debt } from "@/lib/database.types";
+import { DEMO_HOUSEHOLD_ID } from "@/lib/mocks/constants";
 
 export const mockDebts: Debt[] = [
   {
     id: "debt-1",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     entity: "Hipoteca",
     balance: 120000,
     monthly_payment: 2500,
@@ -13,7 +14,7 @@ export const mockDebts: Debt[] = [
   },
   {
     id: "debt-2",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     entity: "Auto familiar",
     balance: 18000,
     monthly_payment: 950,
@@ -23,7 +24,7 @@ export const mockDebts: Debt[] = [
   },
   {
     id: "debt-3",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     entity: "Tarjeta viajes",
     balance: 4200,
     monthly_payment: 350,
@@ -32,4 +33,3 @@ export const mockDebts: Debt[] = [
     created_at: new Date().toISOString(),
   },
 ];
-

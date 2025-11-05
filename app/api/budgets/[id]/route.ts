@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesUpdate } from "@/lib/database.types";
+import { deleteDemoBudget, updateDemoBudget } from "@/lib/mocks/store";
 
 
 interface RouteContext {
@@ -14,17 +15,18 @@ export async function PATCH(request: Request, context: RouteContext) {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
 
-  if (!householdId) {
-    return NextResponse.json(
-      { error: "No se encontró el hogar" },
-      { status: 400 },
-    );
-  }
-
   const payload = (await request.json()) as TablesUpdate<'budgets'>;
   const { household_id: _ignoredHousehold, id: _ignoredId, ...rest } = payload;
   void _ignoredHousehold;
   void _ignoredId;
+
+  if (!householdId) {
+    const updated = updateDemoBudget(id, rest);
+    if (!updated) {
+      return NextResponse.json({ error: "Presupuesto no encontrado" }, { status: 404 });
+    }
+    return NextResponse.json(updated);
+  }
 
   const updatePayload = Object.fromEntries(
     Object.entries({
@@ -56,10 +58,11 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const householdId = await getHouseholdId();
 
   if (!householdId) {
-    return NextResponse.json(
-      { error: "No se encontró el hogar" },
-      { status: 400 },
-    );
+    const removed = deleteDemoBudget(id);
+    if (!removed) {
+      return NextResponse.json({ error: "Presupuesto no encontrado" }, { status: 404 });
+    }
+    return NextResponse.json({ success: true });
   }
 
   const { error } = await supabase

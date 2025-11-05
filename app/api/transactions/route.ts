@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { mockTransactions } from "@/components/transactions/mock-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesInsert } from "@/lib/database.types";
+import { addDemoTransaction, getDemoTransactions } from "@/lib/mocks/store";
 
 export const revalidate = 0;
 
@@ -14,10 +14,7 @@ export async function GET(request: Request) {
   const monthKey = searchParams.get("monthKey");
 
   if (!householdId) {
-    const fallback = monthKey
-      ? mockTransactions.filter((item) => item.date.startsWith(monthKey))
-      : mockTransactions;
-    return NextResponse.json(fallback);
+    return NextResponse.json(getDemoTransactions(monthKey));
   }
 
   let query = supabase
@@ -60,17 +57,19 @@ export async function POST(request: Request) {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
 
-  if (!householdId) {
-    return NextResponse.json(
-      { error: "No se encontró el hogar" },
-      { status: 400 },
-    );
-  }
-
   const payload = (await request.json()) as Pick<
     TablesInsert<'transactions'>,
     "date" | "category" | "monto" | "persona" | "tipo" | "nota" | "metodo"
   >;
+
+  if (!householdId) {
+    const demoTransaction = addDemoTransaction({
+      ...payload,
+      metodo: payload.metodo ?? null,
+      nota: payload.nota ?? null,
+    });
+    return NextResponse.json(demoTransaction, { status: 201 });
+  }
 
   const insertPayload: TablesInsert<'transactions'> = {
     ...payload,

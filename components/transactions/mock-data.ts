@@ -1,9 +1,10 @@
 import type { Tables } from "@/lib/database.types";
+import { DEMO_HOUSEHOLD_ID } from "@/lib/mocks/constants";
 
 export const mockTransactions: Tables<'transactions'>[] = [
   {
     id: "income-1",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-01",
     category: "Salarios",
     tipo: "ingreso",
@@ -15,7 +16,7 @@ export const mockTransactions: Tables<'transactions'>[] = [
   },
   {
     id: "1",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-04",
     category: "Tere",
     tipo: "gasto",
@@ -27,7 +28,7 @@ export const mockTransactions: Tables<'transactions'>[] = [
   },
   {
     id: "2",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-04",
     category: "Deporte",
     tipo: "gasto",
@@ -39,7 +40,7 @@ export const mockTransactions: Tables<'transactions'>[] = [
   },
   {
     id: "3",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-04",
     category: "Extras",
     tipo: "gasto",
@@ -51,7 +52,7 @@ export const mockTransactions: Tables<'transactions'>[] = [
   },
   {
     id: "4",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-04",
     category: "Restaurantes",
     tipo: "gasto",
@@ -63,7 +64,7 @@ export const mockTransactions: Tables<'transactions'>[] = [
   },
   {
     id: "5",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-04",
     category: "Extras",
     tipo: "gasto",
@@ -75,7 +76,7 @@ export const mockTransactions: Tables<'transactions'>[] = [
   },
   {
     id: "6",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-04",
     category: "Estacionalidad",
     tipo: "gasto",
@@ -87,7 +88,7 @@ export const mockTransactions: Tables<'transactions'>[] = [
   },
   {
     id: "7",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-04",
     category: "Compras Casa",
     tipo: "gasto",
@@ -99,7 +100,7 @@ export const mockTransactions: Tables<'transactions'>[] = [
   },
   {
     id: "8",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-04",
     category: "Carro",
     tipo: "gasto",
@@ -111,7 +112,7 @@ export const mockTransactions: Tables<'transactions'>[] = [
   },
   {
     id: "9",
-    household_id: "",
+    household_id: DEMO_HOUSEHOLD_ID,
     date: "2025-11-04",
     category: "Extras",
     tipo: "gasto",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { mockDebts } from "@/components/debts/mock-data";
 import { getActiveDebts } from "@/lib/supabase/debts";
+import { getDemoDebts } from "@/lib/mocks/store";
 
 export async function GET() {
   try {
@@ -9,6 +9,6 @@ export async function GET() {
     return NextResponse.json(debts);
   } catch (error) {
     console.error("[API] /api/debts/active", error);
-    return NextResponse.json(mockDebts);
+    return NextResponse.json(getDemoDebts());
   }
 }

@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { mockSavings } from "@/components/savings/mock-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesInsert } from "@/lib/database.types";
+import { addDemoSaving, getDemoSavings } from "@/lib/mocks/store";
 
 export async function GET() {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
 
   if (!householdId) {
-    return NextResponse.json(mockSavings);
+    return NextResponse.json(getDemoSavings());
   }
 
   const { data, error } = await supabase
@@ -28,18 +28,19 @@ export async function GET() {
 export async function POST(request: Request) {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
-
-  if (!householdId) {
-    return NextResponse.json(
-      { error: "No se encontró el hogar" },
-      { status: 400 },
-    );
-  }
-
   const payload = (await request.json()) as Pick<
     TablesInsert<'savings'>,
     "goal_name" | "target_amount" | "current_amount" | "deadline"
   >;
+
+  if (!householdId) {
+    const demoSaving = addDemoSaving({
+      ...payload,
+      current_amount: payload.current_amount ?? 0,
+      deadline: payload.deadline ?? null,
+    });
+    return NextResponse.json(demoSaving, { status: 201 });
+  }
 
   const insertPayload: TablesInsert<'savings'> = {
     ...payload,

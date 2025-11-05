@@ -1,32 +1,16 @@
 import type { DashboardData } from "@/lib/supabase/dashboard";
-import { mockBudgets } from "@/components/budgets/mock-data";
-import { mockTransactions } from "@/components/transactions/mock-data";
-import { mockSavings } from "@/components/savings/mock-data";
-import { mockDebts } from "@/components/debts/mock-data";
+import {
+  getDemoBudgets,
+  getDemoDebts,
+  getDemoSavings,
+  getDemoTransactions,
+} from "@/lib/mocks/store";
 
 export function getDemoDashboard(monthKey: string): DashboardData {
-  const transactions = mockTransactions.filter((item) =>
-    item.date.startsWith(monthKey),
-  );
-
-  const availableMonths = Object.keys(mockBudgets);
-  const safeMonth =
-    (monthKey && Object.prototype.hasOwnProperty.call(mockBudgets, monthKey)
-      ? monthKey
-      : undefined) ??
-    (availableMonths.length > 0 ? availableMonths[0] : undefined);
-  const rawBudgets = safeMonth
-    ? mockBudgets[safeMonth as keyof typeof mockBudgets] ?? []
-    : [];
-  const budgets = rawBudgets.map((item, index) => ({
-    ...item,
-    household_id: "",
-    created_at: new Date(
-      `${(safeMonth ?? monthKey) ?? "2025-11"}-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`,
-    ).toISOString(),
-  }));
-  const debts = mockDebts;
-  const savings = mockSavings;
+  const transactions = getDemoTransactions(monthKey);
+  const budgets = getDemoBudgets(monthKey);
+  const debts = getDemoDebts();
+  const savings = getDemoSavings();
 
   const incomes = transactions.filter((item) => item.tipo === "ingreso");
   const expenses = transactions.filter(
