@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { Tables, SavingGoal } from "@/lib/database.types";
+import { handleAuthRedirect } from "@/lib/utils/api";
 
 export function useSavings() {
   return useQuery<Tables<'savings'>[]>({
     queryKey: ["savings"],
     queryFn: async () => {
       const response = await fetch("/api/savings");
+      handleAuthRedirect(response);
       if (!response.ok) {
         throw new Error("No pudimos cargar las metas de ahorro");
       }
@@ -37,6 +39,7 @@ export function useCreateSaving() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos guardar la meta de ahorro");
@@ -61,6 +64,7 @@ export function useUpdateSaving() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos actualizar la meta de ahorro");
@@ -83,6 +87,7 @@ export function useDeleteSaving() {
       const response = await fetch(`/api/savings/${id}`, {
         method: "DELETE",
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos eliminar la meta de ahorro");

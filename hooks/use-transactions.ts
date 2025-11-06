@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { Tables, TablesUpdate } from "@/lib/database.types";
+import { handleAuthRedirect } from "@/lib/utils/api";
 
 export function useTransactions(monthKey?: string) {
   return useQuery<Tables<'transactions'>[]>({
@@ -9,6 +10,7 @@ export function useTransactions(monthKey?: string) {
       const params = new URLSearchParams();
       if (monthKey) params.set("monthKey", monthKey);
       const response = await fetch(`/api/transactions?${params.toString()}`);
+      handleAuthRedirect(response);
       if (!response.ok) {
         throw new Error("No pudimos cargar las transacciones");
       }
@@ -44,6 +46,11 @@ export function useCreateTransaction() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      handleAuthRedirect(response);
+      if (!response.ok) {
+        const message = (await response.json()?.catch(() => null))?.error;
+        throw new Error(message ?? "No pudimos guardar la transacción");
+      }
 
       return (await response.json()) as Tables<'transactions'>;
     },
@@ -65,6 +72,7 @@ export function useUpdateTransaction() {
         body: JSON.stringify(payload),
       });
 
+      handleAuthRedirect(response);
       if (!response.ok) {
         throw new Error("No pudimos actualizar la transacción");
       }
@@ -88,6 +96,7 @@ export function useImportTransactions() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transactions: payload }),
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos importar las transacciones");
@@ -110,6 +119,7 @@ export function useDeleteTransaction() {
       const response = await fetch(`/api/transactions/${id}`, {
         method: "DELETE",
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos eliminar la transacción");

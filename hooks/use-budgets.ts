@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { Tables, TablesInsert, TablesUpdate } from "@/lib/database.types";
+import { handleAuthRedirect } from "@/lib/utils/api";
 
 export function useBudgets(monthKey?: string) {
   return useQuery<Tables<'budgets'>[]>({
@@ -9,6 +10,7 @@ export function useBudgets(monthKey?: string) {
       const params = new URLSearchParams();
       if (monthKey) params.set("monthKey", monthKey);
       const response = await fetch(`/api/budgets?${params.toString()}`);
+      handleAuthRedirect(response);
       if (!response.ok) {
         throw new Error("No pudimos cargar los presupuestos");
       }
@@ -40,6 +42,7 @@ export function useCreateBudget() {
         },
         body: JSON.stringify(payload satisfies Pick<TablesInsert<'budgets'>, "month_key" | "category" | "amount">),
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos guardar el presupuesto");
@@ -67,6 +70,7 @@ export function useUpdateBudget() {
         },
         body: JSON.stringify(payload),
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos actualizar el presupuesto");
@@ -91,6 +95,7 @@ export function useDeleteBudget() {
       const response = await fetch(`/api/budgets/${input.id}`, {
         method: "DELETE",
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos eliminar el presupuesto");

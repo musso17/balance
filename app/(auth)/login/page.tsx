@@ -9,18 +9,36 @@ import { useSupabase } from "@/components/providers/supabase-provider";
 export default function LoginPage() {
   const router = useRouter();
   const supabase = useSupabase();
-
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSessionChecked, setHasSessionChecked] = useState(false);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get("redirect");
+    if (!value) {
+      setRedirectTarget("/dashboard");
+      return;
+    }
+    try {
+      const decoded = decodeURIComponent(value);
+      setRedirectTarget(decoded.startsWith("/") ? decoded : "/dashboard");
+    } catch {
+      setRedirectTarget("/dashboard");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!redirectTarget) return;
+
     let isMounted = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!isMounted) return;
       if (data.session) {
-        router.replace("/dashboard");
+        router.replace(redirectTarget);
       } else {
         setHasSessionChecked(true);
       }
@@ -28,7 +46,7 @@ export default function LoginPage() {
     return () => {
       isMounted = false;
     };
-  }, [router, supabase]);
+  }, [redirectTarget, router, supabase]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,9 +59,10 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setInfoMessage(null);
 
+    const target = redirectTarget ?? "/dashboard";
     const emailRedirectTo =
       typeof window !== "undefined"
-        ? `${window.location.origin}/auth/callback`
+        ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(target)}`
         : undefined;
 
     const { error } = await supabase.auth.signInWithOtp({
@@ -68,7 +87,7 @@ export default function LoginPage() {
     setEmail("");
   };
 
-  if (!hasSessionChecked) {
+  if (!hasSessionChecked || !redirectTarget) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[hsl(var(--background))]">
         <p className="text-sm text-muted-foreground">Preparando login…</p>
@@ -124,4 +143,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

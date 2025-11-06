@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { Debt } from "@/lib/database.types";
+import { handleAuthRedirect } from "@/lib/utils/api";
 
 export function useDebts() {
   return useQuery<Debt[]>({
     queryKey: ["debts"],
     queryFn: async () => {
       const response = await fetch("/api/debts");
+      handleAuthRedirect(response);
       if (!response.ok) {
         throw new Error("No pudimos cargar las deudas");
       }
@@ -38,6 +40,7 @@ export function useCreateDebt() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos guardar la deuda");
@@ -62,6 +65,7 @@ export function useUpdateDebt() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos actualizar la deuda");
@@ -84,6 +88,7 @@ export function useDeleteDebt() {
       const response = await fetch(`/api/debts/${id}`, {
         method: "DELETE",
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos eliminar la deuda");
@@ -103,6 +108,7 @@ export function useActiveDebts() {
     queryKey: ["active-debts"],
     queryFn: async () => {
       const response = await fetch("/api/debts/active");
+      handleAuthRedirect(response);
       if (!response.ok) {
         throw new Error("No pudimos cargar las deudas activas");
       }
@@ -131,6 +137,7 @@ export function useDebtAction() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      handleAuthRedirect(response);
 
       if (!response.ok) {
         throw new Error("No pudimos realizar la acción de deuda");
