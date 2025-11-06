@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesInsert } from "@/lib/database.types";
 import { addDemoTransaction, getDemoTransactions } from "@/lib/mocks/store";
+import { isDemoMode } from "@/lib/mocks/config";
 
 export const revalidate = 0;
 
@@ -13,10 +14,16 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const monthKey = searchParams.get("monthKey");
 
-  if (!householdId) {
+  if (isDemoMode && !householdId) {
     return NextResponse.json(getDemoTransactions(monthKey));
   }
 
+  if (!householdId) {
+    return NextResponse.json(
+      { error: "No se encontró el hogar" },
+      { status: 400 },
+    );
+  }
   let query = supabase
     .from("transactions")
     .select("*")
@@ -62,13 +69,20 @@ export async function POST(request: Request) {
     "date" | "category" | "monto" | "persona" | "tipo" | "nota" | "metodo"
   >;
 
-  if (!householdId) {
+  if (isDemoMode && !householdId) {
     const demoTransaction = addDemoTransaction({
       ...payload,
       metodo: payload.metodo ?? null,
       nota: payload.nota ?? null,
     });
     return NextResponse.json(demoTransaction, { status: 201 });
+  }
+
+  if (!householdId) {
+    return NextResponse.json(
+      { error: "No se encontró el hogar" },
+      { status: 400 },
+    );
   }
 
   const insertPayload: TablesInsert<'transactions'> = {

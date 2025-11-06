@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesUpdate, TablesInsert } from "@/lib/database.types";
 import { performDemoDebtAction } from "@/lib/mocks/store";
+import { isDemoMode } from "@/lib/mocks/config";
 
 import {
   accrueMonthlyInterest,
@@ -35,6 +36,12 @@ export async function POST(request: Request) {
   };
 
   if (!householdId) {
+    if (!isDemoMode) {
+      return NextResponse.json(
+        { error: "No se encontró el hogar" },
+        { status: 400 },
+      );
+    }
     try {
       const result = performDemoDebtAction({
         debt_id,

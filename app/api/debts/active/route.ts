@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getActiveDebts } from "@/lib/supabase/debts";
 import { getDemoDebts } from "@/lib/mocks/store";
+import { isDemoMode } from "@/lib/mocks/config";
 
 export async function GET() {
   try {
@@ -9,6 +10,12 @@ export async function GET() {
     return NextResponse.json(debts);
   } catch (error) {
     console.error("[API] /api/debts/active", error);
-    return NextResponse.json(getDemoDebts());
+    if (isDemoMode) {
+      return NextResponse.json(getDemoDebts());
+    }
+    return NextResponse.json(
+      { error: "No se pudieron cargar las deudas activas" },
+      { status: 500 },
+    );
   }
 }

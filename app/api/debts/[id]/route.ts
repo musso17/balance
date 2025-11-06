@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesUpdate } from "@/lib/database.types";
 import { deleteDemoDebt, updateDemoDebt } from "@/lib/mocks/store";
+import { isDemoMode } from "@/lib/mocks/config";
 
 
 interface RouteContext {
@@ -22,6 +23,12 @@ export async function PATCH(request: Request, context: RouteContext) {
   const updatePayload = rest as TablesUpdate<'debts'>;
 
   if (!householdId) {
+    if (!isDemoMode) {
+      return NextResponse.json(
+        { error: "No se encontró el hogar" },
+        { status: 400 },
+      );
+    }
     const updated = updateDemoDebt(id, updatePayload);
     if (!updated) {
       return NextResponse.json({ error: "Deuda no encontrada" }, { status: 404 });
@@ -50,6 +57,12 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const householdId = await getHouseholdId();
 
   if (!householdId) {
+    if (!isDemoMode) {
+      return NextResponse.json(
+        { error: "No se encontró el hogar" },
+        { status: 400 },
+      );
+    }
     const removed = deleteDemoDebt(id);
     if (!removed) {
       return NextResponse.json({ error: "Deuda no encontrada" }, { status: 404 });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getDemoDashboard } from "@/lib/mocks/dashboard";
+import { isDemoMode } from "@/lib/mocks/config";
 import { getDashboardData } from "@/lib/supabase/dashboard";
 import { getServerSession } from "@/lib/supabase/auth"; // This will now resolve correctly
 
@@ -12,6 +13,9 @@ export async function GET(request: Request) {
 
   try {
     if (!session) {
+      if (!isDemoMode) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+      }
       return NextResponse.json(getDemoDashboard(monthKey));
     }
 

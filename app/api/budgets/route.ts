@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesInsert } from "@/lib/database.types";
 import { addDemoBudget, getDemoBudgets } from "@/lib/mocks/store";
+import { isDemoMode } from "@/lib/mocks/config";
 
 export async function GET(request: Request) {
   const supabase = createSupabaseServerClient();
@@ -13,8 +14,15 @@ export async function GET(request: Request) {
   const monthKey =
     searchParams.get("monthKey") ?? new Date().toISOString().slice(0, 7);
 
-  if (!householdId) {
+  if (isDemoMode && !householdId) {
     return NextResponse.json(getDemoBudgets(monthKey));
+  }
+
+  if (!householdId) {
+    return NextResponse.json(
+      { error: "No se encontró el hogar" },
+      { status: 400 },
+    );
   }
 
   let query = supabase
@@ -44,9 +52,16 @@ export async function POST(request: Request) {
     "month_key" | "category" | "amount"
   >;
 
-  if (!householdId) {
+  if (isDemoMode && !householdId) {
     const demoBudget = addDemoBudget(payload);
     return NextResponse.json(demoBudget, { status: 201 });
+  }
+
+  if (!householdId) {
+    return NextResponse.json(
+      { error: "No se encontró el hogar" },
+      { status: 400 },
+    );
   }
 
   const insertPayload: TablesInsert<'budgets'> = {

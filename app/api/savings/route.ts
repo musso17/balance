@@ -4,13 +4,21 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesInsert } from "@/lib/database.types";
 import { addDemoSaving, getDemoSavings } from "@/lib/mocks/store";
+import { isDemoMode } from "@/lib/mocks/config";
 
 export async function GET() {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
 
-  if (!householdId) {
+  if (isDemoMode && !householdId) {
     return NextResponse.json(getDemoSavings());
+  }
+
+  if (!householdId) {
+    return NextResponse.json(
+      { error: "No se encontró el hogar" },
+      { status: 400 },
+    );
   }
 
   const { data, error } = await supabase
@@ -33,13 +41,20 @@ export async function POST(request: Request) {
     "goal_name" | "target_amount" | "current_amount" | "deadline"
   >;
 
-  if (!householdId) {
+  if (isDemoMode && !householdId) {
     const demoSaving = addDemoSaving({
       ...payload,
       current_amount: payload.current_amount ?? 0,
       deadline: payload.deadline ?? null,
     });
     return NextResponse.json(demoSaving, { status: 201 });
+  }
+
+  if (!householdId) {
+    return NextResponse.json(
+      { error: "No se encontró el hogar" },
+      { status: 400 },
+    );
   }
 
   const insertPayload: TablesInsert<'savings'> = {
