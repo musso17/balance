@@ -23,7 +23,6 @@ export function TransactionForm() {
   const mutation = useCreateTransaction();
   const debtActionMutation = useDebtAction();
   const isMobile = useMediaQuery("(max-width: 767px)");
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const {
     register,
     reset,
@@ -52,12 +51,6 @@ export function TransactionForm() {
   );
 
   const isDebtTransaction = transactionType === "deuda";
-
-  useEffect(() => {
-    if (!isMobile) {
-      setIsSheetOpen(false);
-    }
-  }, [isMobile]);
 
   useEffect(() => {
     if (!isDebtTransaction) {
@@ -129,28 +122,11 @@ export function TransactionForm() {
         debt_action: undefined,
         nota: "",
       });
-      if (isMobile) {
-        setIsSheetOpen(false);
-      }
     } catch (error) {
       console.error("[transactions] create", error);
       toast.error("No pudimos registrar la transacción.");
     }
   };
-  useEffect(() => {
-    if (!isMobile) return;
-    const originalOverflow = document.body.style.overflow;
-    if (isSheetOpen) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-    document.body.style.overflow = originalOverflow;
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isMobile, isSheetOpen]);
 
   const FormFields = () => (
     <>
@@ -298,68 +274,6 @@ export function TransactionForm() {
       Registrar transacción
     </button>
   );
-
-  if (isMobile) {
-    return (
-      <>
-        <div className="glass-panel space-y-3 p-4">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-foreground">
-              Añadir transacción
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Registra gastos, ingresos o movimientos de deuda en segundos.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsSheetOpen(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90"
-          >
-            Registrar transacción
-          </button>
-        </div>
-
-        {isSheetOpen && (
-          <div
-            className="fixed inset-0 z-50 flex bg-slate-900/50 backdrop-blur-sm"
-            onClick={(event) => {
-              if (event.target === event.currentTarget) {
-                setIsSheetOpen(false);
-              }
-            }}
-          >
-            <div className="relative flex h-full w-full flex-col overflow-hidden rounded-none border border-white/30 bg-white/95">
-              <div className="flex items-center justify-between border-b border-white/60 px-5 py-4">
-                <div>
-                  <h3 className="text-base font-semibold text-foreground">
-                    Nueva transacción
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Completa los datos para agregarla al registro.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsSheetOpen(false)}
-                  className="rounded-2xl border border-white/60 bg-white/70 p-2 text-muted-foreground shadow-sm transition hover:text-foreground"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="flex h-full flex-col gap-6 overflow-y-auto px-5 py-6"
-              >
-                <FormFields />
-                {submitButton}
-              </form>
-            </div>
-          </div>
-        )}
-      </>
-    );
-  }
 
   return (
     <form

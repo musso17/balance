@@ -61,7 +61,7 @@ export default function DashboardLayout({
         <div className="absolute right-[-120px] top-40 h-72 w-72 rounded-full bg-sky-300/30 blur-3xl" />
         <div className="absolute bottom-[-180px] left-1/2 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-indigo-300/30 blur-3xl" />
       </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 md:flex-row md:px-8 lg:px-12">
+      <div className="relative z-10 mx-auto flex w-full flex-col gap-8 px-4 py-8 sm:px-6 md:flex-row md:px-10 lg:px-16 xl:px-24">
         {isSidebarOpen && !isDesktop && (
           <button
             type="button"
@@ -129,4 +129,3 @@ export default function DashboardLayout({
     </div>
   );
 }
-

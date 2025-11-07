@@ -81,44 +81,88 @@ export function TransactionTable() {
     }
   };
 
+  const containerClass = isMobile
+    ? "rounded-[28px] border border-white/60 bg-white/80 p-4 shadow-lg shadow-slate-900/5 backdrop-blur space-y-5"
+    : "glass-panel space-y-6 p-4 sm:p-6";
+
+  const Filters = isMobile ? (
+    <div className="rounded-2xl border border-white/60 bg-white/60 p-3 shadow-sm">
+      <div className="flex flex-col gap-2">
+        <button
+          onClick={() => refetch()}
+          className="inline-flex items-center justify-center rounded-2xl bg-slate-900/5 px-3 py-2 text-sm font-semibold text-foreground transition hover:bg-slate-900/10"
+        >
+          Refrescar datos
+        </button>
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
+          Persona
+          <select
+            value={personaFilter}
+            onChange={(event) => setPersonaFilter(event.target.value)}
+            className="soft-input mt-1 text-sm"
+          >
+            {personas.map((persona) => (
+              <option key={persona}>{persona}</option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
+          Tipo
+          <select
+            value={tipoFilter}
+            onChange={(event) => setTipoFilter(event.target.value)}
+            className="soft-input mt-1 text-sm"
+          >
+            {tipos.map((tipo) => (
+              <option key={tipo}>{tipo}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </div>
+  ) : (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+      <button
+        onClick={() => refetch()}
+        className="w-full rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:text-primary sm:w-auto"
+      >
+        Refrescar
+      </button>
+      <select
+        value={personaFilter}
+        onChange={(event) => setPersonaFilter(event.target.value)}
+        className="soft-input w-full sm:w-auto"
+      >
+        {personas.map((persona) => (
+          <option key={persona}>{persona}</option>
+        ))}
+      </select>
+      <select
+        value={tipoFilter}
+        onChange={(event) => setTipoFilter(event.target.value)}
+        className="soft-input w-full sm:w-auto"
+      >
+        {tipos.map((tipo) => (
+          <option key={tipo}>{tipo}</option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
-    <div className="glass-panel space-y-6 p-4 sm:p-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className={containerClass}>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-foreground sm:text-base">
+          <h3 className="text-base font-semibold text-foreground">
             Historial del mes
           </h3>
           <p className="text-xs text-muted-foreground sm:text-sm">
             Filtra por persona o tipo para revisar los detalles.
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <button
-            onClick={() => refetch()}
-            className="w-full rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:text-primary sm:w-auto"
-          >
-            Refrescar
-          </button>
-          <select
-            value={personaFilter}
-            onChange={(event) => setPersonaFilter(event.target.value)}
-            className="soft-input w-full sm:w-auto"
-          >
-            {personas.map((persona) => (
-              <option key={persona}>{persona}</option>
-            ))}
-          </select>
-          <select
-            value={tipoFilter}
-            onChange={(event) => setTipoFilter(event.target.value)}
-            className="soft-input w-full sm:w-auto"
-          >
-            {tipos.map((tipo) => (
-              <option key={tipo}>{tipo}</option>
-            ))}
-          </select>
-        </div>
+        {!isMobile && Filters}
       </header>
+      {isMobile && Filters}
 
       {isLoading && (
         <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/40 text-sm text-muted-foreground backdrop-blur">
