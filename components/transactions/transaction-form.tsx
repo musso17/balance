@@ -150,7 +150,7 @@ export function TransactionForm() {
           />
         </Field>
 
-        {transactionType !== "ingreso" && !isDebtTransaction && (
+        {transactionType !== "deuda" && (
           <Field label="Categoría" error={errors.category?.message}>
             <select
               {...register("category")}
