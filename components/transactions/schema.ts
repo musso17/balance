@@ -49,6 +49,17 @@ export const metodosOptions = [
 
 export const debtActions = ["pay_installment", "amortize"] as const;
 
+const incomeCategorySet = new Set<string>(incomeCategoryOptions);
+const expenseCategorySet = new Set<string>(expenseCategoryOptions);
+
+const isIncomeCategory = (
+  value: string,
+): value is (typeof incomeCategoryOptions)[number] => incomeCategorySet.has(value);
+
+const isExpenseCategory = (
+  value: string,
+): value is (typeof expenseCategoryOptions)[number] => expenseCategorySet.has(value);
+
 export const transactionSchema = z
   .object({
     date: z.string().min(1, "La fecha es obligatoria"),
@@ -78,11 +89,10 @@ export const transactionSchema = z
         return;
       }
 
-      const allowedCategories =
-        data.tipo === "ingreso" ? incomeCategoryOptions : expenseCategoryOptions;
-      const isValidCategory = allowedCategories.includes(
-        data.category as (typeof allowedCategories)[number],
-      );
+      const isValidCategory =
+        data.tipo === "ingreso"
+          ? isIncomeCategory(data.category)
+          : isExpenseCategory(data.category);
       if (!isValidCategory) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
