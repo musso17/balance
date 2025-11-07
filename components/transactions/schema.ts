@@ -52,11 +52,11 @@ export const debtActions = ["pay_installment", "amortize"] as const;
 const incomeCategorySet = new Set<string>(incomeCategoryOptions);
 const expenseCategorySet = new Set<string>(expenseCategoryOptions);
 
-const isIncomeCategory = (
+export const isIncomeCategory = (
   value: string,
 ): value is (typeof incomeCategoryOptions)[number] => incomeCategorySet.has(value);
 
-const isExpenseCategory = (
+export const isExpenseCategory = (
   value: string,
 ): value is (typeof expenseCategoryOptions)[number] => expenseCategorySet.has(value);
 

@@ -18,6 +18,8 @@ import {
   personasOptions,
   transactionSchema,
   type TransactionFormValues,
+  isIncomeCategory,
+  isExpenseCategory,
 } from "./schema";
 
 export function TransactionForm() {
@@ -73,9 +75,13 @@ export function TransactionForm() {
   useEffect(() => {
     if (isDebtTransaction) return;
     if (!categoryValue) return;
-    const allowed =
-      transactionType === "ingreso" ? incomeCategoryOptions : expenseCategoryOptions;
-    if (!allowed.includes(categoryValue as (typeof allowed)[number])) {
+
+    const isValid =
+      transactionType === "ingreso"
+        ? isIncomeCategory(categoryValue)
+        : isExpenseCategory(categoryValue);
+
+    if (!isValid) {
       setValue("category", "", { shouldValidate: true });
     }
   }, [categoryValue, isDebtTransaction, transactionType, setValue]);
