@@ -12,7 +12,8 @@ import { formatCurrencyNoDecimals } from "@/lib/utils/number";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 import {
-  categoryOptions,
+  incomeCategoryOptions,
+  expenseCategoryOptions,
   metodosOptions,
   personasOptions,
   transactionSchema,
@@ -43,7 +44,10 @@ export function TransactionForm() {
   const transactionType = watch("tipo");
   const selectedDebtId = watch("debt_id");
   const debtAction = watch("debt_action");
+  const categoryValue = watch("category");
   const { data: activeDebts, isLoading: isLoadingActiveDebts } = useActiveDebts();
+  const availableCategories =
+    transactionType === "ingreso" ? incomeCategoryOptions : expenseCategoryOptions;
 
   const selectedDebt = useMemo(
     () => activeDebts?.find((debt) => debt.id === selectedDebtId) ?? null,
@@ -65,6 +69,16 @@ export function TransactionForm() {
       setValue("category", "", { shouldValidate: true });
     }
   }, [isDebtTransaction, selectedDebt, setValue]);
+
+  useEffect(() => {
+    if (isDebtTransaction) return;
+    if (!categoryValue) return;
+    const allowed =
+      transactionType === "ingreso" ? incomeCategoryOptions : expenseCategoryOptions;
+    if (!allowed.includes(categoryValue as (typeof allowed)[number])) {
+      setValue("category", "", { shouldValidate: true });
+    }
+  }, [categoryValue, isDebtTransaction, transactionType, setValue]);
 
   useEffect(() => {
     if (!isDebtTransaction || !selectedDebt) return;
@@ -157,7 +171,7 @@ export function TransactionForm() {
               className="soft-input"
             >
               <option value="">Selecciona una categoría</option>
-              {categoryOptions.map((category) => (
+              {availableCategories.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>

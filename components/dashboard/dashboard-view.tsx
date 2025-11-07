@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
-import { Loader2, ArrowUpRight, ArrowDownRight, TrendingUp, CircleDollarSign } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowDownRight, TrendingUp, CircleDollarSign, Plus } from "lucide-react";
 
 import { useDashboardStore } from "@/store/dashboard-store";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
@@ -36,7 +37,7 @@ export function DashboardView() {
 
   return (
     <div className="space-y-10">
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
         <div>
           <h2 className="text-base font-semibold text-foreground sm:text-lg lg:text-xl">
             {formatMonthKey(monthKey)}
@@ -45,16 +46,25 @@ export function DashboardView() {
             Resumen financiero del hogar en el mes seleccionado.
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground sm:text-sm">
-            Mes
-          </label>
-          <input
-            type="month"
-            value={monthKey}
-            onChange={(event) => setMonthKey(event.target.value)}
-            className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/25"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground sm:text-sm">
+              Mes
+            </label>
+            <input
+              type="month"
+              value={monthKey}
+              onChange={(event) => setMonthKey(event.target.value)}
+              className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/25"
+            />
+          </div>
+          <Link
+            href="/transacciones"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow transition hover:bg-primary/90 sm:text-sm"
+          >
+            <Plus className="size-4" />
+            Registrar transacción
+          </Link>
         </div>
       </header>
 

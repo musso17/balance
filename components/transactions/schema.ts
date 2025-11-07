@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-export const categoryOptions = [
+export const incomeCategoryOptions = ["Sueldo", "Otro"] as const;
+
+export const expenseCategoryOptions = [
   "Alquiler",
   "Compras Casa",
   "Luz",
@@ -22,6 +24,12 @@ export const categoryOptions = [
   "Extras",
   "Estacionalidad",
   "Mantenimiento Carro",
+] as const;
+
+export const categoryOptions = expenseCategoryOptions;
+export const allCategoryOptions = [
+  ...incomeCategoryOptions,
+  ...expenseCategoryOptions,
 ] as const;
 
 export const personasOptions = [
@@ -70,8 +78,10 @@ export const transactionSchema = z
         return;
       }
 
-      const isValidCategory = categoryOptions.includes(
-        data.category as (typeof categoryOptions)[number],
+      const allowedCategories =
+        data.tipo === "ingreso" ? incomeCategoryOptions : expenseCategoryOptions;
+      const isValidCategory = allowedCategories.includes(
+        data.category as (typeof allowedCategories)[number],
       );
       if (!isValidCategory) {
         ctx.addIssue({

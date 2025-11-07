@@ -11,7 +11,7 @@ import type { Tables } from "@/lib/database.types";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 import {
-  categoryOptions,
+  allCategoryOptions,
   metodosOptions,
   personasOptions,
   transactionSchema,
@@ -40,7 +40,7 @@ export function TransactionEditForm({ transaction, onClose }: TransactionEditFor
     if (transaction) {
       reset({
         date: transaction.date.slice(0, 10),
-        category: transaction.category as typeof categoryOptions[number],
+        category: transaction.category as typeof allCategoryOptions[number],
         monto: transaction.monto,
         persona: transaction.persona,
         tipo: transaction.tipo as "ingreso" | "gasto" | "deuda",
