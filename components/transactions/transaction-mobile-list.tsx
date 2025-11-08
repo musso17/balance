@@ -1,9 +1,11 @@
 "use client";
 
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { useMemo } from "react";
+import { ChevronRight, Loader2, Pencil, Trash2 } from "lucide-react";
+import { compareDesc, format, isThisMonth, isToday, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 
 import { formatCurrency } from "@/lib/utils/number";
-import { formatDate } from "@/lib/utils/date";
 import type { Tables } from "@/lib/database.types";
 
 interface TransactionMobileListProps {
@@ -19,86 +21,132 @@ export function TransactionMobileList({
   onDelete,
   deletingId,
 }: TransactionMobileListProps) {
+  const sections = useMemo(() => {
+    const sorted = [...transactions].sort((a, b) =>
+      compareDesc(parseISO(a.date), parseISO(b.date)),
+    );
+
+    const map = new Map<string, Tables<'transactions'>[]>();
+    for (const transaction of sorted) {
+      const section = getSectionLabel(transaction.date);
+      const group = map.get(section) ?? [];
+      group.push(transaction);
+      map.set(section, group);
+    }
+
+    return Array.from(map.entries()).map(([label, items]) => ({
+      label,
+      items,
+    }));
+  }, [transactions]);
+
   return (
-    <div className="rounded-3xl border border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur">
-      <div className="flex items-center justify-between px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        <span>Fecha · Categoría</span>
-        <span>Monto</span>
-      </div>
-      <div className="divide-y divide-slate-100/80">
-        {transactions.map((transaction) => {
-          const isIncome = transaction.tipo === "ingreso";
-          const isDeleting = deletingId === transaction.id;
-          const tipoLabel =
-            transaction.tipo.charAt(0).toUpperCase() + transaction.tipo.slice(1);
+    <div className="space-y-5">
+      {sections.map(({ label, items }) => (
+        <section
+          key={label}
+          className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-lg shadow-slate-900/5"
+        >
+          <header className="border-b border-slate-100/80 bg-slate-50/60 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {label}
+          </header>
+          <ul className="divide-y divide-slate-100/80">
+            {items.map((transaction) => {
+              const isIncome = transaction.tipo === "ingreso";
+              const isDeleting = deletingId === transaction.id;
 
-          return (
-            <article key={transaction.id} className="px-4 py-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {formatDate(transaction.date)}
-                  </p>
-                  <p className="text-base font-semibold text-foreground">
-                    {transaction.category}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {transaction.persona} · {transaction.metodo ?? "—"}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span
-                    className={`block text-sm font-semibold sm:text-base ${isIncome ? "text-emerald-600" : "text-rose-500"}`}
-                  >
-                    {formatCurrency(transaction.monto)}
-                  </span>
-                  <span
-                    className={`mt-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${isIncome ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}
-                  >
-                    {tipoLabel}
-                  </span>
-                </div>
-              </div>
-
-              {transaction.nota && (
-                <p className="mt-3 rounded-2xl bg-slate-50/70 px-3 py-2 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground/80">Nota:</span>{" "}
-                  <span className="text-foreground/80">{transaction.nota}</span>
-                </p>
-              )}
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => onEdit(transaction)}
-                  className="inline-flex flex-1 items-center justify-center gap-1 rounded-2xl border border-white/70 bg-white/90 px-3 py-2 text-xs font-semibold text-muted-foreground shadow-sm transition hover:text-primary"
-                >
-                  <Pencil className="size-3.5" />
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => !isDeleting && onDelete(transaction)}
-                  disabled={isDeleting}
-                  className="inline-flex flex-1 items-center justify-center gap-1 rounded-2xl border border-white/70 bg-white/90 px-3 py-2 text-xs font-semibold text-muted-foreground shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="size-3.5 animate-spin" />
-                      Eliminando
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="size-3.5" />
-                      Eliminar
-                    </>
-                  )}
-                </button>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+              return (
+                <li key={transaction.id} className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-500">
+                      {getTransactionInitial(transaction)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-slate-900">
+                        {getTransactionTitle(transaction)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatLongDate(transaction.date)} · {transaction.persona}
+                      </p>
+                      {transaction.metodo && (
+                        <p className="text-[11px] text-slate-400">
+                          {transaction.metodo}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-1">
+                        <span
+                          className={`text-sm font-semibold ${isIncome ? "text-emerald-600" : "text-rose-500"}`}
+                        >
+                          {formatCurrency(transaction.monto)}
+                        </span>
+                        <ChevronRight className="size-4 text-slate-300" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onEdit(transaction)}
+                          className="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:text-primary"
+                          aria-label="Editar transacción"
+                        >
+                          <Pencil className="size-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => !isDeleting && onDelete(transaction)}
+                          disabled={isDeleting}
+                          className="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
+                          aria-label="Eliminar transacción"
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="size-4 animate-spin text-rose-500" />
+                          ) : (
+                            <Trash2 className="size-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
   );
+}
+
+function getSectionLabel(dateString: string) {
+  const date = parseISO(dateString);
+  if (isToday(date)) return "Hoy";
+  if (isThisMonth(date)) return "Este mes";
+  const formatted = format(date, "MMMM yyyy", { locale: es }).split(" ");
+  if (formatted.length >= 2) {
+    const [month, year] = formatted;
+    return `${capitalizeWord(month)} ${year}`;
+  }
+  return capitalizeWord(formatted[0] ?? "");
+}
+
+function formatLongDate(dateString: string) {
+  const formatted = format(parseISO(dateString), "dd MMMM", { locale: es });
+  const [day, ...rest] = formatted.split(" ");
+  const month = rest.join(" ");
+  return month ? `${day} ${capitalizeWord(month)}` : capitalizeWord(formatted);
+}
+
+function getTransactionInitial(transaction: Tables<'transactions'>) {
+  const source = transaction.nota?.trim() || transaction.category || transaction.persona;
+  return source?.charAt(0).toUpperCase() ?? "·";
+}
+
+function getTransactionTitle(transaction: Tables<'transactions'>) {
+  return transaction.nota?.trim() || transaction.category || "Sin descripción";
+}
+
+function capitalizeWord(value: string) {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
