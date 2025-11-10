@@ -39,15 +39,18 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
   const startDate = new Date(`${monthKey}-01T00:00:00.000Z`);
   const endDate = addMonths(startDate, 1);
 
+  const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+
   const [{ data: transactions, error: transactionsError }, { data: budgets, error: budgetsError }, { data: debts, error: debtsError }, { data: savings, error: savingsError }] =
     await Promise.all([
       supabase
         .from("transactions")
         .select("*")
         .eq("household_id", householdId)
-        .gte("date", startDate.toISOString())
-        .lt("date", endDate.toISOString())
-        .order("date", { ascending: false }),
+        .gte("date", formatDate(startDate))
+        .lt("date", formatDate(endDate))
+        .order("date", { ascending: false })
+        .order("created_at", { ascending: true }),
       supabase
         .from("budgets")
         .select("*")

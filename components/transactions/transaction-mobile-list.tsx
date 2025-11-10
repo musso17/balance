@@ -2,11 +2,15 @@
 
 import { useMemo } from "react";
 import { ChevronRight, Loader2, Pencil, Trash2 } from "lucide-react";
-import { compareDesc, format, isThisMonth, isToday, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
 import { formatCurrency } from "@/lib/utils/number";
 import type { Tables } from "@/lib/database.types";
+import {
+  capitalizeWord,
+  groupTransactionsBySection,
+} from "./section-utils";
 
 interface TransactionMobileListProps {
   transactions: Tables<'transactions'>[];
@@ -21,24 +25,10 @@ export function TransactionMobileList({
   onDelete,
   deletingId,
 }: TransactionMobileListProps) {
-  const sections = useMemo(() => {
-    const sorted = [...transactions].sort((a, b) =>
-      compareDesc(parseISO(a.date), parseISO(b.date)),
-    );
-
-    const map = new Map<string, Tables<'transactions'>[]>();
-    for (const transaction of sorted) {
-      const section = getSectionLabel(transaction.date);
-      const group = map.get(section) ?? [];
-      group.push(transaction);
-      map.set(section, group);
-    }
-
-    return Array.from(map.entries()).map(([label, items]) => ({
-      label,
-      items,
-    }));
-  }, [transactions]);
+  const sections = useMemo(
+    () => groupTransactionsBySection(transactions),
+    [transactions],
+  );
 
   return (
     <div className="space-y-5">
@@ -118,18 +108,6 @@ export function TransactionMobileList({
   );
 }
 
-function getSectionLabel(dateString: string) {
-  const date = parseISO(dateString);
-  if (isToday(date)) return "Hoy";
-  if (isThisMonth(date)) return "Este mes";
-  const formatted = format(date, "MMMM yyyy", { locale: es }).split(" ");
-  if (formatted.length >= 2) {
-    const [month, year] = formatted;
-    return `${capitalizeWord(month)} ${year}`;
-  }
-  return capitalizeWord(formatted[0] ?? "");
-}
-
 function formatLongDate(dateString: string) {
   const formatted = format(parseISO(dateString), "dd MMMM", { locale: es });
   const [day, ...rest] = formatted.split(" ");
@@ -144,9 +122,4 @@ function getTransactionInitial(transaction: Tables<'transactions'>) {
 
 function getTransactionTitle(transaction: Tables<'transactions'>) {
   return transaction.nota?.trim() || transaction.category || "Sin descripción";
-}
-
-function capitalizeWord(value: string) {
-  if (!value) return value;
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }

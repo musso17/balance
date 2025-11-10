@@ -18,3 +18,10 @@ export function formatDate(date: string | Date) {
   const value = typeof date === "string" ? parseISO(date) : date;
   return format(value, "dd MMM", { locale: es });
 }
+
+export function getLocalISODateString(date: Date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}

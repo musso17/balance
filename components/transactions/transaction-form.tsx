@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 import { useCreateTransaction } from "@/hooks/use-transactions";
 import { useActiveDebts, useDebtAction } from "@/hooks/use-debts";
 import { formatCurrencyNoDecimals } from "@/lib/utils/number";
+import { getLocalISODateString } from "@/lib/utils/date";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 import {
@@ -37,7 +38,7 @@ export function TransactionForm() {
     resolver:
       zodResolver(transactionSchema) as unknown as Resolver<TransactionFormValues>,
     defaultValues: {
-      date: new Date().toISOString().slice(0, 10),
+      date: getLocalISODateString(),
       tipo: "gasto",
       metodo: "Yape",
     },

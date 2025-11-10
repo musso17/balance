@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -14,6 +14,7 @@ import { formatCurrency } from "@/lib/utils/number";
 import { formatDate } from "@/lib/utils/date";
 import type { Tables } from "@/lib/database.types";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { groupTransactionsBySection } from "./section-utils";
 
 import { TransactionEditForm } from "./transaction-edit-form";
 
@@ -60,6 +61,11 @@ export function TransactionTable() {
       return matchesPersona && matchesTipo;
     });
   }, [data, personaFilter, tipoFilter]);
+
+  const sections = useMemo(
+    () => groupTransactionsBySection(filtered),
+    [filtered],
+  );
 
   const handleDelete = async (transaction: Tables<'transactions'>) => {
     if (deletingId) return;
@@ -211,14 +217,23 @@ export function TransactionTable() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/40">
-                  {filtered.map((transaction) => (
-                    <Row
-                      key={transaction.id}
-                      transaction={transaction}
-                      onEdit={() => setEditingTransaction(transaction)}
-                      onDelete={() => handleDelete(transaction)}
-                      isDeleting={deletingId === transaction.id}
-                    />
+                  {sections.map((section) => (
+                    <Fragment key={`${section.label}-${section.sortKey}`}>
+                      <tr className="bg-white/65 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <td colSpan={7} className="py-2 px-4">
+                          {section.label}
+                        </td>
+                      </tr>
+                      {section.items.map((transaction) => (
+                        <Row
+                          key={transaction.id}
+                          transaction={transaction}
+                          onEdit={() => setEditingTransaction(transaction)}
+                          onDelete={() => handleDelete(transaction)}
+                          isDeleting={deletingId === transaction.id}
+                        />
+                      ))}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

@@ -28,7 +28,8 @@ export async function GET(request: Request) {
     .from("transactions")
     .select("*")
     .eq("household_id", householdId)
-    .order("date", { ascending: false });
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: true });
 
   if (monthKey) {
     const startDate = new Date(`${monthKey}-01T00:00:00.000Z`);
