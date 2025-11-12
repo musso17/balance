@@ -53,6 +53,23 @@ export function getDemoDashboard(monthKey: string): DashboardData {
           return acc + progress;
         }, 0) / savings.length
       : 0;
+  const savingsRate =
+    totalIncomes > 0 ? (totalIncomes - totalExpenses) / totalIncomes : 0;
+
+  const history = Array.from({ length: 6 }).map((_, index) => {
+    const offset = 5 - index;
+    const monthLabel = `M-${offset}`;
+    const modifier = 1 - offset * 0.04;
+    const incomesValue = totalIncomes * Math.max(modifier, 0.5);
+    const expensesValue = totalExpenses * Math.max(modifier * 0.95, 0.4);
+    return {
+      month: `${monthKey}-${offset}`,
+      label: monthLabel,
+      incomes: incomesValue,
+      expenses: expensesValue,
+      balance: incomesValue - expensesValue,
+    };
+  });
 
   return {
     totals: {
@@ -61,7 +78,19 @@ export function getDemoDashboard(monthKey: string): DashboardData {
       balance: totalIncomes - totalExpenses,
       monthlyDebtImpact,
       savingsProgress,
+      savingsRate,
     },
+    comparisons: {
+      previousMonthLabel: "mes anterior",
+      incomesDelta: null,
+      expensesDelta: null,
+      balanceDelta: null,
+    },
+    projections: {
+      projectedMonthEndExpense: totalExpenses,
+      dailyAverageExpense: totalExpenses / 30,
+    },
+    history,
     categories,
     transactions,
     budgets,

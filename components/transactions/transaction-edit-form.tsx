@@ -94,7 +94,7 @@ export function TransactionEditForm({ transaction, onClose }: TransactionEditFor
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-white/60 bg-white/70 p-2 text-muted-foreground shadow-sm transition hover:text-foreground"
+              className="rounded-2xl border border-white/10 bg-white/5 p-2 text-muted-foreground shadow-sm transition hover:text-foreground"
             >
               <X className="size-4" />
             </button>
@@ -168,7 +168,7 @@ export function TransactionEditForm({ transaction, onClose }: TransactionEditFor
                 <button
                   type="submit"
                   disabled={mutation.isPending}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70 md:w-auto"
+                  className="cta-button w-full px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed md:w-auto"
                 >
                   {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
                   Guardar cambios
@@ -176,7 +176,7 @@ export function TransactionEditForm({ transaction, onClose }: TransactionEditFor
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
+                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
                 >
                   Cancelar
                 </button>

@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 import { DashboardNav } from "@/components/navigation/dashboard-nav";
-import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { useMediaQuery } from "@/hooks/use-media-query";
 // import { getHouseholdSummary } from "@/lib/supabase/household"; // Temporarily removed
 import { format } from "date-fns";
@@ -57,11 +56,11 @@ export default function DashboardLayout({
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-44 top-16 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute right-[-120px] top-40 h-72 w-72 rounded-full bg-sky-300/30 blur-3xl" />
-        <div className="absolute bottom-[-180px] left-1/2 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-indigo-300/30 blur-3xl" />
+        <div className="absolute -left-40 top-10 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute right-[-160px] top-32 h-[320px] w-[320px] rounded-full bg-indigo-500/15 blur-[140px]" />
+        <div className="absolute bottom-[-240px] left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
       </div>
-      <div className="relative z-10 mx-auto flex w-full flex-col gap-8 px-4 py-8 sm:px-6 md:flex-row md:px-10 lg:px-16 xl:px-24">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1680px] flex-col gap-8 px-4 py-8 sm:px-6 md:flex-row md:px-8 lg:px-12 xl:px-16">
         {isSidebarOpen && !isDesktop && (
           <button
             type="button"
@@ -71,7 +70,7 @@ export default function DashboardLayout({
           />
         )}
         <aside
-          className={`glass-panel pointer-events-auto fixed inset-y-4 left-3 z-30 flex h-[calc(100vh-2rem)] w-[min(320px,90vw)] flex-col gap-10 px-5 py-6 transition-transform duration-300 ease-in-out md:static md:h-auto md:min-w-[260px] md:w-auto md:px-6 md:py-8 ${isSidebarOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 md:translate-x-0 md:opacity-100"}`}
+          className={`pointer-events-auto fixed inset-y-4 left-3 z-30 flex h-[calc(100vh-2rem)] w-[min(260px,88vw)] flex-col gap-10 rounded-[26px] border border-white/10 bg-white/5 px-4 py-6 shadow-[0_25px_65px_-40px_rgba(0,0,0,0.9)] backdrop-blur-2xl transition-transform duration-300 ease-in-out md:static md:h-auto md:min-w-[240px] md:w-[260px] md:px-5 md:py-8 ${isSidebarOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 md:translate-x-0 md:opacity-100"}`}
           onTouchStart={handleSwipeStart}
           onTouchEnd={handleSwipeEnd}
         >
@@ -85,7 +84,7 @@ export default function DashboardLayout({
             {!isDesktop && (
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="rounded-xl border border-white/40 bg-white/60 p-2 text-muted-foreground transition hover:text-foreground"
+                className="rounded-xl border border-white/10 bg-white/5 p-2 text-muted-foreground shadow-sm transition hover:text-foreground"
                 aria-label="Cerrar navegación"
               >
                 <X className="size-4" />
@@ -112,14 +111,12 @@ export default function DashboardLayout({
             </div>
             <button
               onClick={() => setIsSidebarOpen((prev) => !prev)}
-              className="rounded-2xl border border-white/40 bg-white/70 p-2 text-muted-foreground shadow-sm backdrop-blur transition hover:text-foreground"
+              className="rounded-2xl border border-white/10 bg-white/5 p-2 text-muted-foreground shadow-sm backdrop-blur transition hover:text-foreground"
               aria-label="Abrir navegación"
             >
               <Menu className="size-5" />
             </button>
           </div>
-
-          <Breadcrumbs homeCrumb={{ href: "/dashboard", label: "Dashboard" }} />
 
           <div className="glass-panel min-h-[70vh] p-4 sm:p-6 lg:p-8">
             {children}

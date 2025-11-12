@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,15 +15,11 @@ import { formatCurrency } from "@/lib/utils/number";
 import { formatDate } from "@/lib/utils/date";
 
 import { savingSchema, type SavingFormValues } from "./schema";
-import { mockSavings } from "./mock-data";
 import type { Tables } from "@/lib/database.types";
 
 export function SavingList() {
-  // const { data, isLoading, isError, error } = useSavings();
-  const data = mockSavings as Tables<'savings'>[];
-  const isLoading = false;
-  const isError = false as boolean;
-  const error = null as Error | null;
+  const { data, isLoading, isError, error } = useSavings();
+  const savings = data ?? [];
 
   return (
     <div className="glass-panel space-y-6 p-4 sm:p-6">
@@ -38,7 +33,7 @@ export function SavingList() {
       </header>
 
       {isLoading && (
-        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/40 text-sm text-muted-foreground backdrop-blur">
+        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/5 text-sm text-muted-foreground backdrop-blur-2xl">
           <span className="flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             Cargando metas de ahorro...
@@ -47,22 +42,22 @@ export function SavingList() {
       )}
 
       {isError && (
-        <div className="rounded-2xl border border-rose-200/70 bg-rose-100/70 px-4 py-3 text-sm text-rose-600">
+        <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
           {error instanceof Error
             ? error.message
             : "Error al cargar las metas de ahorro"}
         </div>
       )}
 
-      {!isLoading && data && data.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-white/60 bg-white/40 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur">
+      {!isLoading && savings.length === 0 && (
+        <p className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur-2xl">
           Añadan metas para monitorear su progreso financiero.
         </p>
       )}
 
-      {!isLoading && data && data.length > 0 && (
+      {!isLoading && savings.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2">
-          {data.map((goal) => (
+          {savings.map((goal) => (
             <SavingRowItem key={goal.id} goal={goal} />
           ))}
         </div>
@@ -135,7 +130,7 @@ function SavingRowItem({ goal }: { goal: Tables<'savings'> }) {
     : 0;
   const percent = Math.round(progress * 100);
   const isComplete = percent >= 100;
-  const progressColor = isComplete ? "bg-emerald-500" : "bg-primary";
+  const progressColor = isComplete ? "bg-emerald-300" : "bg-primary";
 
   return (
     <article className="subdued-card space-y-4 p-4 md:p-5">
@@ -197,7 +192,7 @@ function SavingRowItem({ goal }: { goal: Tables<'savings'> }) {
             <button
               type="submit"
               disabled={updateMutation.isPending}
-              className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+              className="cta-button px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed"
             >
               {updateMutation.isPending && (
                 <Loader2 className="size-4 animate-spin" />
@@ -215,7 +210,7 @@ function SavingRowItem({ goal }: { goal: Tables<'savings'> }) {
                 });
                 setIsEditing(false);
               }}
-              className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
+              className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
             >
               <X className="size-3" /> Cancelar
             </button>
@@ -247,7 +242,7 @@ function SavingRowItem({ goal }: { goal: Tables<'savings'> }) {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="rounded-2xl border border-white/60 bg-white/70 p-1.5 text-muted-foreground shadow-sm transition hover:text-primary"
+                className="rounded-2xl border border-white/10 bg-white/5 p-1.5 text-muted-foreground shadow-sm transition hover:text-primary"
               >
                 <Pencil className="size-3.5" />
               </button>
@@ -255,7 +250,7 @@ function SavingRowItem({ goal }: { goal: Tables<'savings'> }) {
                 type="button"
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
-                className="rounded-2xl border border-white/60 bg-white/70 p-1.5 text-muted-foreground shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
+                className="rounded-2xl border border-white/10 bg-white/5 p-1.5 text-muted-foreground shadow-sm transition hover:text-rose-400 disabled:cursor-not-allowed"
               >
                 {deleteMutation.isPending ? (
                   <Loader2 className="size-3.5 animate-spin" />
@@ -279,7 +274,7 @@ function SavingRowItem({ goal }: { goal: Tables<'savings'> }) {
           />
         </div>
         {isComplete && (
-          <p className="text-xs font-medium text-emerald-600">
+          <p className="text-xs font-medium text-emerald-200">
             ¡Meta cumplida! Considera crear una nueva prioridad.
           </p>
         )}

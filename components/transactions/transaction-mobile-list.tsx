@@ -35,12 +35,12 @@ export function TransactionMobileList({
       {sections.map(({ label, items }) => (
         <section
           key={label}
-          className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-lg shadow-slate-900/5"
+          className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-lg backdrop-blur-xl"
         >
-          <header className="border-b border-slate-100/80 bg-slate-50/60 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <header className="border-b border-white/5 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {label}
           </header>
-          <ul className="divide-y divide-slate-100/80">
+          <ul className="divide-y divide-white/5">
             {items.map((transaction) => {
               const isIncome = transaction.tipo === "ingreso";
               const isDeleting = deletingId === transaction.id;
@@ -48,18 +48,18 @@ export function TransactionMobileList({
               return (
                 <li key={transaction.id} className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-500">
+                    <div className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-muted-foreground">
                       {getTransactionInitial(transaction)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-slate-900">
+                      <p className="truncate text-sm font-semibold text-foreground">
                         {getTransactionTitle(transaction)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {formatLongDate(transaction.date)} · {transaction.persona}
                       </p>
                       {transaction.metodo && (
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-[11px] text-muted-foreground/80">
                           {transaction.metodo}
                         </p>
                       )}
@@ -67,17 +67,17 @@ export function TransactionMobileList({
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex items-center gap-1">
                         <span
-                          className={`text-sm font-semibold ${isIncome ? "text-emerald-600" : "text-rose-500"}`}
+                          className={`text-sm font-semibold ${isIncome ? "text-emerald-200" : "text-rose-300"}`}
                         >
                           {formatCurrency(transaction.monto)}
                         </span>
-                        <ChevronRight className="size-4 text-slate-300" />
+                        <ChevronRight className="size-4 text-muted-foreground" />
                       </div>
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
                           onClick={() => onEdit(transaction)}
-                          className="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:text-primary"
+                          className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground shadow-sm transition hover:text-primary"
                           aria-label="Editar transacción"
                         >
                           <Pencil className="size-4" />
@@ -86,11 +86,11 @@ export function TransactionMobileList({
                           type="button"
                           onClick={() => !isDeleting && onDelete(transaction)}
                           disabled={isDeleting}
-                          className="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
+                          className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-muted-foreground shadow-sm transition hover:text-rose-400 disabled:cursor-not-allowed"
                           aria-label="Eliminar transacción"
                         >
                           {isDeleting ? (
-                            <Loader2 className="size-4 animate-spin text-rose-500" />
+                            <Loader2 className="size-4 animate-spin text-rose-400" />
                           ) : (
                             <Trash2 className="size-4" />
                           )}

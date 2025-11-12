@@ -92,7 +92,7 @@ export function BudgetList() {
       </header>
 
       {isLoading && (
-        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/40 text-sm text-muted-foreground backdrop-blur">
+        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/5 text-sm text-muted-foreground backdrop-blur-2xl">
           <span className="flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             Cargando presupuestos...
@@ -101,7 +101,7 @@ export function BudgetList() {
       )}
 
       {budgetsError && (
-        <div className="rounded-2xl border border-rose-200/70 bg-rose-100/70 px-4 py-3 text-sm text-rose-600">
+        <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
           {budgetErrorInstance instanceof Error
             ? budgetErrorInstance.message
             : "Error al cargar los presupuestos"}
@@ -109,7 +109,7 @@ export function BudgetList() {
       )}
 
       {!isLoading && !hasAnyBudgetAssigned && (
-        <p className="rounded-2xl border border-dashed border-white/60 bg-white/40 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur">
+        <p className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur-2xl">
           Define categorías con presupuesto para ver su ejecución.
         </p>
       )}
@@ -201,16 +201,11 @@ function BudgetRowItem({
 
   const varianceLabel = row.variance >= 0 ? "Disponible" : "Excedido";
   const varianceStyle =
-    row.variance >= 0 ? "text-emerald-600" : "text-rose-500";
+    row.variance >= 0 ? "text-emerald-200" : "text-rose-300";
   const hasPlan = row.planned > 0;
   const utilization = hasPlan ? row.actual / row.planned : 0;
   const progressPercent = hasPlan ? Math.min(utilization, 1) * 100 : 0;
   const isOverSpent = hasPlan ? utilization > 1 : row.actual > 0;
-  const overflowPercent = isOverSpent
-    ? hasPlan
-      ? Math.min((utilization - 1) * 100, 100)
-      : 100
-    : 0;
   const usagePercentage = hasPlan
     ? Math.round(Math.min(utilization, 1) * 100)
     : row.actual > 0
@@ -224,7 +219,7 @@ function BudgetRowItem({
   const barColor =
     !hasPlan && row.actual > 0
       ? "hsl(var(--danger))"
-      : isOverSpent
+      : utilization >= 1
         ? "hsl(var(--danger))"
         : "hsl(var(--primary))";
 
@@ -269,7 +264,7 @@ function BudgetRowItem({
             <button
               type="submit"
               disabled={updateMutation.isPending || createMutation.isPending}
-              className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+              className="cta-button px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed"
             >
               {(updateMutation.isPending || createMutation.isPending) && (
                 <Loader2 className="size-4 animate-spin" />
@@ -286,7 +281,7 @@ function BudgetRowItem({
                 });
                 setIsEditing(false);
               }}
-              className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
+              className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
             >
               <X className="size-3" /> Cancelar
             </button>
@@ -321,12 +316,6 @@ function BudgetRowItem({
                 className="budget-progress-fill"
                 style={{ width: barWidth, backgroundColor: barColor }}
               />
-              {hasPlan && overflowPercent > 0 && (
-                <div
-                  className="budget-progress-overflow"
-                  style={{ width: `${overflowPercent}%` }}
-                />
-              )}
               <span className="budget-progress-label">
                 {hasPlan
                   ? `${usagePercentage}%`
@@ -336,7 +325,7 @@ function BudgetRowItem({
               </span>
             </div>
             {isOverSpent && (
-              <p className="text-xs font-medium text-rose-500">
+              <p className="text-xs font-medium text-rose-300">
                 Te excediste {formatCurrency(Math.abs(row.variance))} este mes.
               </p>
             )}
@@ -350,7 +339,7 @@ function BudgetRowItem({
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="rounded-2xl border border-white/60 bg-white/70 p-2 text-muted-foreground shadow-sm transition hover:text-primary"
+              className="rounded-2xl border border-white/10 bg-white/5 p-2 text-muted-foreground shadow-sm transition hover:text-primary"
             >
               <Pencil className="size-4" />
             </button>
@@ -358,7 +347,7 @@ function BudgetRowItem({
               type="button"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
-              className="rounded-2xl border border-white/60 bg-white/70 p-2 text-muted-foreground shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
+              className="rounded-2xl border border-white/10 bg-white/5 p-2 text-muted-foreground shadow-sm transition hover:text-rose-400 disabled:cursor-not-allowed"
             >
               {deleteMutation.isPending ? (
                 <Loader2 className="size-4 animate-spin" />

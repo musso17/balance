@@ -204,7 +204,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+            className="cta-button w-full disabled:cursor-not-allowed"
           >
             {isSubmitting ? "Procesando…" : submitLabel}
           </button>
@@ -222,7 +222,7 @@ export default function LoginPage() {
         </button>
 
         {infoMessage && (
-          <p className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+          <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-muted-foreground">
             {infoMessage}
           </p>
         )}

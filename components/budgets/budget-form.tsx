@@ -91,7 +91,7 @@ export function BudgetForm() {
       <button
         type="submit"
         disabled={mutation.isPending}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+        className="cta-button w-full disabled:cursor-not-allowed"
       >
         {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
         Guardar presupuesto

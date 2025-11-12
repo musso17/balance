@@ -26,7 +26,7 @@ const MobileTransactionList = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="rounded-xl border border-dashed border-white/60 bg-white/50 p-4 text-sm text-muted-foreground">
+      <div className="rounded-xl border border-dashed border-white/15 bg-white/5 p-4 text-sm text-muted-foreground backdrop-blur-2xl">
         Preparando vista móvil...
       </div>
     ),
@@ -88,15 +88,15 @@ export function TransactionTable() {
   };
 
   const containerClass = isMobile
-    ? "rounded-[28px] border border-white/60 bg-white/80 p-4 shadow-lg shadow-slate-900/5 backdrop-blur space-y-5"
+    ? "rounded-[28px] border border-white/10 bg-white/5 p-4 shadow-lg backdrop-blur-2xl space-y-5"
     : "glass-panel space-y-6 p-4 sm:p-6";
 
   const Filters = isMobile ? (
-    <div className="rounded-2xl border border-white/60 bg-white/60 p-3 shadow-sm">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-3 shadow-sm backdrop-blur-xl">
       <div className="flex flex-col gap-2">
         <button
           onClick={() => refetch()}
-          className="inline-flex items-center justify-center rounded-2xl bg-slate-900/5 px-3 py-2 text-sm font-semibold text-foreground transition hover:bg-slate-900/10"
+          className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-foreground transition hover:text-primary"
         >
           Refrescar datos
         </button>
@@ -130,7 +130,7 @@ export function TransactionTable() {
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
       <button
         onClick={() => refetch()}
-        className="w-full rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:text-primary sm:w-auto"
+        className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:text-primary sm:w-auto"
       >
         Refrescar
       </button>
@@ -171,7 +171,7 @@ export function TransactionTable() {
       {isMobile && Filters}
 
       {isLoading && (
-        <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/40 text-sm text-muted-foreground backdrop-blur">
+        <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/5 text-sm text-muted-foreground backdrop-blur-2xl">
           <span className="flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             Cargando transacciones...
@@ -180,7 +180,7 @@ export function TransactionTable() {
       )}
 
       {isError && (
-        <div className="rounded-2xl border border-rose-200/70 bg-rose-100/70 px-4 py-3 text-sm text-rose-600">
+        <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
           {error instanceof Error
             ? error.message
             : "Error al cargar las transacciones"}
@@ -188,7 +188,7 @@ export function TransactionTable() {
       )}
 
       {!isLoading && filtered.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-white/60 bg-white/40 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur">
+        <p className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur-2xl">
           No hay transacciones que coincidan con los filtros seleccionados.
         </p>
       )}
@@ -203,9 +203,9 @@ export function TransactionTable() {
               onDelete={handleDelete}
             />
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
               <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-white/60 bg-white/40 text-xs uppercase tracking-wide text-muted-foreground backdrop-blur">
+                <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-muted-foreground backdrop-blur-xl">
                   <tr>
                     <th className="py-3 pr-4 font-medium">Fecha</th>
                     <th className="py-3 pr-4 font-medium">Categoría</th>
@@ -219,7 +219,7 @@ export function TransactionTable() {
                 <tbody className="divide-y divide-white/40">
                   {sections.map((section) => (
                     <Fragment key={`${section.label}-${section.sortKey}`}>
-                      <tr className="bg-white/65 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <tr className="bg-white/5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                         <td colSpan={7} className="py-2 px-4">
                           {section.label}
                         </td>
@@ -266,7 +266,7 @@ function Row({
   const isIncome = transaction.tipo === "ingreso";
 
   return (
-    <tr className="transition-colors hover:bg-white/30">
+    <tr className="transition-colors hover:bg-white/5">
       <td className="whitespace-nowrap py-3 pr-4 text-xs text-muted-foreground">
         {formatDate(transaction.date)}
       </td>
@@ -280,7 +280,7 @@ function Row({
         {transaction.persona}
       </td>
       <td
-        className={`py-3 pr-4 text-right font-semibold ${isIncome ? "text-emerald-600" : "text-rose-500"}`}
+        className={`py-3 pr-4 text-right font-semibold ${isIncome ? "text-emerald-200" : "text-rose-300"}`}
       >
         {formatCurrency(transaction.monto)}
       </td>
@@ -292,7 +292,7 @@ function Row({
           <button
             type="button"
             onClick={onEdit}
-            className="rounded-2xl border border-white/60 bg-white/70 p-1.5 text-muted-foreground shadow-sm transition hover:text-primary"
+            className="rounded-2xl border border-white/10 bg-white/5 p-1.5 text-muted-foreground shadow-sm transition hover:text-primary"
           >
             <Pencil className="size-3.5" />
           </button>
@@ -300,7 +300,7 @@ function Row({
             type="button"
             onClick={onDelete}
             disabled={isDeleting}
-            className="rounded-2xl border border-white/60 bg-white/70 p-1.5 text-muted-foreground shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
+            className="rounded-2xl border border-white/10 bg-white/5 p-1.5 text-muted-foreground shadow-sm transition hover:text-rose-400 disabled:cursor-not-allowed"
           >
             {isDeleting ? (
               <Loader2 className="size-3.5 animate-spin" />

@@ -43,7 +43,7 @@ export function SavingsDistribution() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[120px] items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/40 text-sm text-muted-foreground backdrop-blur">
+      <div className="flex min-h-[120px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/5 text-sm text-muted-foreground backdrop-blur-2xl">
         <span className="flex items-center gap-2">
           <Loader2 className="size-4 animate-spin" />
           Calculando distribución de ahorros...
@@ -65,19 +65,19 @@ export function SavingsDistribution() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="subdued-card space-y-1.5 p-4">
           <p className="muted-label">Ingresos del mes</p>
-          <p className="text-2xl font-semibold text-emerald-600">
+          <p className="text-2xl font-semibold text-emerald-200">
             {formatCurrency(income)}
           </p>
         </div>
         <div className="subdued-card space-y-1.5 p-4">
           <p className="muted-label">Gastos del mes</p>
-          <p className="text-2xl font-semibold text-rose-500">
+          <p className="text-2xl font-semibold text-rose-300">
             {formatCurrency(expenses)}
           </p>
         </div>
         <div className="subdued-card space-y-1.5 p-4 sm:col-span-2 lg:col-span-1">
           <p className="muted-label">Balance disponible</p>
-          <p className={`text-2xl font-semibold ${balance >= 0 ? "text-primary" : "text-rose-500"}`}>
+          <p className={`text-2xl font-semibold ${balance >= 0 ? "text-primary" : "text-rose-300"}`}>
             {formatCurrency(balance)}
           </p>
         </div>

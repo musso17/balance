@@ -37,7 +37,7 @@ export function DebtList() {
       </header>
 
       {isLoading && (
-        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/40 text-sm text-muted-foreground backdrop-blur">
+        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/5 text-sm text-muted-foreground backdrop-blur-2xl">
           <span className="flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             Cargando deudas...
@@ -46,13 +46,13 @@ export function DebtList() {
       )}
 
       {isError && (
-        <div className="rounded-2xl border border-rose-200/70 bg-rose-100/70 px-4 py-3 text-sm text-rose-600">
+        <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
           {error instanceof Error ? error.message : "Error al cargar las deudas"}
         </div>
       )}
 
       {!isLoading && data && data.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-white/60 bg-white/40 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur">
+        <p className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur-2xl">
           Sin deudas registradas. Añade compromisos para planificar mejor.
         </p>
       )}
@@ -126,10 +126,10 @@ function DebtRowItem({ debt }: { debt: Tables<'debts'> }) {
 
   const statusClass =
     debt.status === "pagada"
-      ? "border border-emerald-400/40 bg-emerald-500/15 text-emerald-600"
+      ? "border border-emerald-300/40 bg-emerald-400/15 text-emerald-100"
       : debt.status === "morosa"
-        ? "border border-rose-400/40 bg-rose-500/15 text-rose-600"
-        : "border border-amber-400/40 bg-amber-500/20 text-amber-700";
+        ? "border border-rose-400/40 bg-rose-500/15 text-rose-100"
+        : "border border-amber-300/40 bg-amber-400/15 text-amber-100";
 
   return (
     <article className="subdued-card space-y-4 p-4 md:p-5">
@@ -208,7 +208,7 @@ function DebtRowItem({ debt }: { debt: Tables<'debts'> }) {
             <button
               type="submit"
               disabled={updateMutation.isPending}
-              className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+              className="cta-button px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed"
             >
               {updateMutation.isPending && (
                 <Loader2 className="size-4 animate-spin" />
@@ -227,7 +227,7 @@ function DebtRowItem({ debt }: { debt: Tables<'debts'> }) {
                 });
                 setIsEditing(false);
               }}
-              className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
+              className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
             >
               <X className="size-3" /> Cancelar
             </button>
@@ -264,7 +264,7 @@ function DebtRowItem({ debt }: { debt: Tables<'debts'> }) {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="rounded-2xl border border-white/60 bg-white/70 p-2 text-muted-foreground shadow-sm transition hover:text-primary"
+                className="rounded-2xl border border-white/10 bg-white/5 p-2 text-muted-foreground shadow-sm transition hover:text-primary"
               >
                 <Pencil className="size-4" />
               </button>
@@ -272,7 +272,7 @@ function DebtRowItem({ debt }: { debt: Tables<'debts'> }) {
                 type="button"
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
-                className="rounded-2xl border border-white/60 bg-white/70 p-2 text-muted-foreground shadow-sm transition hover:text-rose-500 disabled:cursor-not-allowed"
+                className="rounded-2xl border border-white/10 bg-white/5 p-2 text-muted-foreground shadow-sm transition hover:text-rose-400 disabled:cursor-not-allowed"
               >
                 {deleteMutation.isPending ? (
                   <Loader2 className="size-4 animate-spin" />

@@ -188,7 +188,7 @@ export function TransactionForm() {
         )}
 
         {isDebtTransaction && (
-          <div className="md:col-span-2 rounded-2xl border border-white/50 bg-white/60 p-4 text-sm text-muted-foreground shadow-sm backdrop-blur">
+          <div className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground shadow-sm backdrop-blur-xl">
             <p className="text-sm font-semibold text-foreground">
               {selectedDebt ? selectedDebt.entity : "Selecciona una deuda"}
             </p>
@@ -287,7 +287,7 @@ export function TransactionForm() {
     <button
       type="submit"
       disabled={mutation.isPending || debtActionMutation.isPending}
-      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+      className="cta-button w-full disabled:cursor-not-allowed"
     >
       {(mutation.isPending || debtActionMutation.isPending) && (
         <Loader2 className="size-4 animate-spin" />

@@ -28,7 +28,7 @@ export function DashboardNav({ isCollapsed = false, onNavigate }: DashboardNavPr
   const pathname = usePathname();
 
   return (
-    <nav className="space-y-1.5">
+    <nav className="space-y-2">
       {NAV_ITEMS.map((item) => {
         const isActive =
           pathname === item.href ||
@@ -40,16 +40,35 @@ export function DashboardNav({ isCollapsed = false, onNavigate }: DashboardNavPr
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm font-medium transition",
+              "group relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition",
               isActive
-                ? "border-primary/30 bg-primary/10 text-primary"
-                : "border-transparent text-muted-foreground hover:border-white/50 hover:bg-white/60 hover:text-foreground",
-              isCollapsed && "justify-center",
+                ? "bg-white/10 text-foreground shadow-[0_15px_40px_-30px_rgba(16,185,129,1)]"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+              isCollapsed && "justify-center px-3",
             )}
             onClick={onNavigate}
           >
-            <Icon className="size-5" />
-            {!isCollapsed && <span>{item.label}</span>}
+            <span
+              className={cn(
+                "flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-lg transition",
+                isActive && "border-primary/60 bg-primary/15 text-primary",
+              )}
+            >
+              <Icon className="size-5" />
+            </span>
+            {!isCollapsed && (
+              <span className="flex flex-1 items-center justify-between">
+                {item.label}
+                {isActive && (
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                    Ahora
+                  </span>
+                )}
+              </span>
+            )}
+            {isActive && (
+              <span className="absolute inset-y-2 right-[-6px] w-1 rounded-full bg-primary/80" aria-hidden />
+            )}
           </Link>
         );
       })}
