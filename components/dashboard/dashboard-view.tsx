@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, ElementType } from "react";
 import { addMonths, format, subDays } from "date-fns";
+import { es } from "date-fns/locale";
 import {
   CircleDollarSign,
   Plus,
@@ -52,7 +54,7 @@ export function DashboardView() {
       .map((category) => {
         const planned = category.budget ?? 0;
         const actual = category.expense ?? 0;
-        const usage = planned > 0 ? Math.min(actual / planned, 1) : 0;
+        const usage = planned > 0 ? actual / planned : 0;
         return {
           name: category.category,
           planned,
@@ -125,16 +127,46 @@ export function DashboardView() {
 
   const trendData = useMemo(() => {
     if (!data?.history) return [];
-    const dataset =
-      rangeFilter === "quarter" && data.history.length > 3
-        ? data.history.slice(-3)
-        : data.history;
-    return dataset.map((item) => ({
-      month: item.label,
+
+    const limit = rangeFilter === "quarter" ? 3 : 6;
+    const sortedHistory = [...data.history].sort((a, b) =>
+      a.month.localeCompare(b.month),
+    );
+
+    const getDateFromMonthKey = (key: string) => {
+      const [year, month] = key.split("-");
+      return new Date(Number(year), Number(month) - 1, 1);
+    };
+
+    let formatted = sortedHistory.map((item) => ({
+      monthKey: item.month,
+      label: format(getDateFromMonthKey(item.month), "MMM", { locale: es }),
       ingresos: Math.round(item.incomes),
       gastos: Math.round(item.expenses),
     }));
-  }, [data, rangeFilter]);
+
+    const hasCurrentMonth = sortedHistory.some((item) => item.month === monthKey);
+
+    if (!hasCurrentMonth && data.totals) {
+      formatted = [
+        ...formatted,
+        {
+          monthKey,
+          label: format(getDateFromMonthKey(monthKey), "MMM", { locale: es }),
+          ingresos: Math.round(data.totals.incomes),
+          gastos: Math.round(data.totals.expenses),
+        },
+      ];
+    }
+
+    const uniqueByMonth = Array.from(
+      new Map(formatted.map((item) => [item.monthKey, item])).values(),
+    );
+
+    return uniqueByMonth
+      .slice(-limit)
+      .map(({ label, ingresos, gastos }) => ({ month: label, ingresos, gastos }));
+  }, [data, rangeFilter, monthKey]);
 
   const budgetAlerts = useMemo(() => {
     if (!data?.categories) return [];
@@ -167,71 +199,78 @@ export function DashboardView() {
       comparisonEnabled
         ? formatDeltaLabel(delta, previousLabel)
         : `Basado en ${filterLabel.toLowerCase()}`;
-    const savingsRatePercent = Math.round((summaryTotals.savingsRate ?? 0) * 100);
+    const savingsRatePercent = Math.max(0, Math.round((summaryTotals.savingsRate ?? 0) * 100));
 
     return [
       {
         key: "incomes",
         title: "Ingresos",
-        value: formatCurrencyNoDecimals(summaryTotals.incomes),
+        value: summaryTotals.incomes,
         hint: comparisonText(data.comparisons.incomesDelta),
         icon: Coins,
         tone: "positive" as const,
+        valueFormatter: formatCurrencyNoDecimals,
+        highlight: true,
       },
       {
         key: "expenses",
         title: "Gastos",
-        value: formatCurrencyNoDecimals(summaryTotals.expenses),
+        value: summaryTotals.expenses,
         hint: comparisonText(data.comparisons.expensesDelta),
         icon: Wallet2,
         tone: "negative" as const,
+        valueFormatter: formatCurrencyNoDecimals,
+        highlight: true,
       },
       {
         key: "balance",
         title: "Disponible este mes",
-        value: formatCurrencyNoDecimals(summaryTotals.balance),
+        value: summaryTotals.balance,
         hint: comparisonText(data.comparisons.balanceDelta),
-        subcopy: `Tasa de ahorro: ${Math.max(0, savingsRatePercent)}%`,
+        subcopy: `Tasa de ahorro: ${savingsRatePercent}%`,
         icon: CircleDollarSign,
         tone: "info" as const,
+        valueFormatter: formatCurrencyNoDecimals,
         highlight: true,
       },
       {
         key: "savings",
         title: "Ahorro promedio",
-        value: `${Math.round((data.totals.savingsProgress ?? 0) * 100)}%`,
+        value: Math.round((data.totals.savingsProgress ?? 0) * 100),
         hint:
           data.savings.length > 0
             ? `Promedio sobre ${data.savings.length} metas activas`
             : "Registra metas para medir tu progreso",
         icon: PiggyBank,
         tone: "default" as const,
+        valueFormatter: (value: number) => `${Math.round(value)}%`,
+        highlight: true,
       },
     ];
   }, [data, summaryTotals, rangeFilter, filterLabel]);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-200">
-            <span className="size-2 rounded-full bg-emerald-300" />
+        <div className="space-y-3">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-sky-200">
+            <span className="size-2 rounded-full bg-sky-300" />
             Panel financiero
           </span>
-          <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             Dashboard
           </h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground/90">
             Analiza tus ingresos, gastos y disponibilidad para tomar decisiones más inteligentes cada mes.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-          <div className="flex items-center gap-2 rounded-[26px] border border-white/15 bg-white/5 px-3 py-2 text-sm font-semibold text-foreground shadow-inner backdrop-blur">
+          <div className="flex items-center gap-2 rounded-[28px] border border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-foreground shadow-inner backdrop-blur">
             <button
               type="button"
               aria-label="Mes anterior"
               onClick={() => handleShiftMonth(-1)}
-              className="rounded-2xl border border-transparent p-2 text-muted-foreground transition hover:border-white/20 hover:text-foreground"
+              className="rounded-2xl border border-transparent p-2 text-muted-foreground transition hover:border-white/30 hover:text-foreground"
             >
               <ArrowLeft className="size-4" />
             </button>
@@ -240,37 +279,40 @@ export function DashboardView() {
               type="button"
               aria-label="Mes siguiente"
               onClick={() => handleShiftMonth(1)}
-              className="rounded-2xl border border-transparent p-2 text-muted-foreground transition hover:border-white/20 hover:text-foreground"
+              className="rounded-2xl border border-transparent p-2 text-muted-foreground transition hover:border-white/30 hover:text-foreground"
             >
               <ArrowRight className="size-4" />
             </button>
           </div>
           <Link
             href="/transacciones"
-            className="cta-button inline-flex items-center justify-center gap-2 text-xs sm:text-sm"
+            className="cta-button inline-flex items-center justify-center gap-2"
           >
             <Plus className="size-4" />
             Registrar transacción
           </Link>
         </div>
       </header>
-      <div className="flex flex-wrap items-center gap-2">
-        {RANGE_FILTERS.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={rangeFilter === option.value}
-            onClick={() => setRangeFilter(option.value)}
-            className={cn(
-              "rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition",
-              rangeFilter === option.value
-                ? "border-primary/60 bg-primary/20 text-primary"
-                : "border-white/10 bg-white/5 text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {option.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-3">
+        {RANGE_FILTERS.map((option) => {
+          const isActive = rangeFilter === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => setRangeFilter(option.value)}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] transition",
+                isActive
+                  ? "border border-[#3B82F6] bg-[#3B82F6]/20 text-[#60A5FA]"
+                  : "border border-transparent bg-white/10 text-muted-foreground hover:bg-white/15",
+              )}
+            >
+              {option.label}
+            </button>
+          );
+        })}
       </div>
 
       {isLoading && !data && <DashboardSkeleton />}
@@ -285,45 +327,51 @@ export function DashboardView() {
 
       {data && !isLoading && (
         <>
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {metricConfigs.map(({ key, ...card }) => (
-              <MetricCard key={key} {...card} />
+          <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {metricConfigs.map(({ key, ...card }, index) => (
+              <MetricCard key={key} {...card} style={{ animationDelay: `${index * 80}ms` }} />
             ))}
           </section>
 
-          <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <InsightCard
-              title="Proyección fin de mes"
-              value={formatCurrencyNoDecimals(
-                data.projections?.projectedMonthEndExpense ?? data.totals.expenses,
-              )}
-              description="Si mantienes el ritmo actual."
-            />
-            <InsightCard
-              title="Gasto diario promedio"
-              value={formatCurrencyNoDecimals(
-                data.projections?.dailyAverageExpense ?? data.totals.expenses,
-              )}
-              description="Calculado según los días contabilizados."
-            />
-            <InsightCard
-              title="Alertas de presupuesto"
-              value={
-                budgetAlerts.length > 0
-                  ? `${budgetAlerts.length} categorías`
-                  : "Sin alertas"
-              }
-              description={
-                budgetAlerts.length > 0
-                  ? `${budgetAlerts[0].name} al ${Math.round(budgetAlerts[0].usage * 100)}%`
-                  : "Todas las categorías bajo control."
-              }
-              tone={budgetAlerts.length > 0 ? "warning" : "success"}
-              icon={AlertTriangle}
-            />
+          <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="glass-panel">
+              <InsightCard
+                title="Proyección fin de mes"
+                value={formatCurrencyNoDecimals(
+                  data.projections?.projectedMonthEndExpense ?? data.totals.expenses,
+                )}
+                description="Si mantienes el ritmo actual."
+              />
+            </div>
+            <div className="glass-panel">
+              <InsightCard
+                title="Gasto diario promedio"
+                value={formatCurrencyNoDecimals(
+                  data.projections?.dailyAverageExpense ?? data.totals.expenses,
+                )}
+                description="Calculado según los días contabilizados."
+              />
+            </div>
+            <div className="glass-panel">
+              <InsightCard
+                title="Alertas de presupuesto"
+                value={
+                  budgetAlerts.length > 0
+                    ? `${budgetAlerts.length} categorías`
+                    : "Sin alertas"
+                }
+                description={
+                  budgetAlerts.length > 0
+                    ? `${budgetAlerts[0].name} al ${Math.round(budgetAlerts[0].usage * 100)}%`
+                    : "Todas las categorías bajo control."
+                }
+                tone={budgetAlerts.length > 0 ? "warning" : "success"}
+                icon={AlertTriangle}
+              />
+            </div>
           </section>
 
-          <section className="glass-panel space-y-4 p-4 sm:p-6">
+          <section className="glass-panel space-y-6">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-foreground sm:text-base">
@@ -347,7 +395,7 @@ export function DashboardView() {
           </section>
 
           <section className="grid gap-6 lg:grid-cols-2">
-            <div className="glass-panel space-y-4 p-4 sm:p-6">
+            <div className="glass-panel space-y-6">
               <div className="mb-4">
                 <h3 className="text-sm font-semibold text-foreground sm:text-base">
                   Últimas transacciones
@@ -356,7 +404,7 @@ export function DashboardView() {
                   Los últimos movimientos registrados por la pareja.
                 </p>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {transactions.length === 0 && (
                   <p className="text-sm text-muted-foreground">
                     Aún no hay transacciones en este mes.
@@ -367,7 +415,7 @@ export function DashboardView() {
                 ))}
               </div>
             </div>
-            <div className="glass-panel space-y-4 p-4 sm:p-6">
+            <div className="glass-panel space-y-6">
               <div className="mb-4">
                 <h3 className="text-sm font-semibold text-foreground sm:text-base">
                   Presupuestos en tiempo real
@@ -382,47 +430,44 @@ export function DashboardView() {
                     Aún no registras presupuestos este mes.
                   </p>
                 )}
-                {budgetPreview.map((item) => (
-                  <article key={item.name} className="subdued-card space-y-2 p-3 sm:p-4">
-                    <div className="flex flex-col gap-1 text-sm font-medium text-foreground sm:flex-row sm:items-center sm:justify-between">
-                      <span>{item.name}</span>
-                      <span className="text-sm font-semibold">
-                        {formatCurrencyNoDecimals(item.actual)}
-                        <span className="ml-1 text-xs text-muted-foreground">
-                          / {formatCurrencyNoDecimals(item.planned)}
+                {budgetPreview.map((item) => {
+                  const rawPercent = Math.round(item.usage * 100);
+                  const usagePercent = Math.max(rawPercent, 0);
+                  return (
+                    <div
+                      key={item.name}
+                      className="glass-panel space-y-3"
+                      data-highlight={item.usage > 1 ? "true" : undefined}
+                    >
+                      <div className="flex flex-col gap-1 text-sm font-medium text-foreground sm:flex-row sm:items-center sm:justify-between">
+                        <span>{item.name}</span>
+                        <span className="text-sm font-semibold">
+                          {formatCurrencyNoDecimals(item.actual)}
+                          <span className="ml-1 text-xs text-muted-foreground">
+                            / {formatCurrencyNoDecimals(item.planned)}
+                          </span>
                         </span>
-                      </span>
-                    </div>
-                    <div className="budget-progress-track">
-                      <div
-                        className="budget-progress-fill"
+                      </div>
+                      <div className="budget-progress-track">
+                        <div
+                          className="budget-progress-fill"
                         style={{
-                          width: `${item.usage * 100}%`,
-                          backgroundColor:
-                            item.usage >= 1 ? "hsl(var(--danger))" : "hsl(var(--primary))",
+                          width: `${Math.min(usagePercent, 100)}%`,
+                          background: getBudgetBarColor(usagePercent),
                         }}
                       />
-                      <span className="budget-progress-label">
-                        {Math.round(item.usage * 100)}%
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {item.usage >= 1
-                          ? "Presupuesto sobrepasado"
-                          : `Disponible: ${formatCurrencyNoDecimals(
-                              Math.max(item.planned - item.actual, 0),
-                            )}`}
-                      </span>
-                      {item.usage >= 0.8 && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-100">
-                          <AlertTriangle className="size-3" />
-                          {item.usage >= 1 ? "Alerta" : "80% usado"}
+                        <span className="budget-progress-label">
+                          {usagePercent > 100 ? `${usagePercent}%` : `${usagePercent}%`}
                         </span>
-                      )}
+                      </div>
+                      <BudgetStatus
+                        actual={item.actual}
+                        planned={item.planned}
+                        usagePercent={usagePercent}
+                      />
                     </div>
-                  </article>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </section>
@@ -441,32 +486,40 @@ function MetricCard({
   subcopy,
   className,
   highlight = false,
+  valueFormatter,
+  style,
 }: {
   title: string;
-  value: string;
+  value: number;
   hint: string;
-  icon: React.ElementType;
+  icon: ElementType;
   tone?: "default" | "positive" | "negative" | "info";
   subcopy?: string;
   className?: string;
   highlight?: boolean;
+  valueFormatter?: (value: number) => string;
+  style?: CSSProperties;
 }) {
   const tones = {
     positive: {
-      badge: "bg-emerald-400/15 text-emerald-200",
+      label: "bg-emerald-500/15 text-emerald-200",
       value: "text-emerald-100",
+      icon: "text-emerald-200 border-emerald-300/30",
     },
     negative: {
-      badge: "bg-rose-500/15 text-rose-200",
+      label: "bg-rose-500/15 text-rose-200",
       value: "text-rose-200",
+      icon: "text-rose-200 border-rose-300/30",
     },
     default: {
-      badge: "bg-primary/10 text-primary",
-      value: "text-primary",
+      label: "bg-white/10 text-foreground",
+      value: "text-foreground",
+      icon: "text-white border-white/20",
     },
     info: {
-      badge: "bg-sky-500/10 text-sky-200",
+      label: "bg-sky-500/15 text-sky-200",
       value: "text-sky-100",
+      icon: "text-sky-100 border-sky-300/30",
     },
   } as const;
 
@@ -474,29 +527,86 @@ function MetricCard({
 
   return (
     <div
+      data-highlight={highlight ? "true" : undefined}
       className={cn(
-        "subdued-card group flex h-full flex-col gap-4 p-6 transition duration-300 ease-out",
-        highlight && "border-white/20 bg-gradient-to-br from-sky-500/15 to-white/5",
+        "subdued-card animate-card-pop group flex h-full flex-col gap-5 p-8 transition duration-300 ease-out",
         className,
       )}
+      style={style}
     >
-      <span
-        className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold sm:text-xs ${toneStyles.badge}`}
-      >
-        <Icon className="size-4 shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5" />
-        <span className="truncate">{title}</span>
-      </span>
+      <div className="flex items-center gap-3">
+        <span className={cn("icon-ring size-12", toneStyles.icon)}>
+          <Icon className="size-6" />
+        </span>
+        <span
+          className={cn(
+            "flex-1 rounded-2xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.35em]",
+            toneStyles.label,
+          )}
+        >
+          {title}
+        </span>
+      </div>
       <p
-        className={`text-[20px] font-extrabold leading-tight tracking-tight break-words text-balance ${toneStyles.value} md:text-[26px]`}
+        className={cn(
+          "text-[36px] font-bold leading-tight tracking-tight text-balance md:text-[42px]",
+          toneStyles.value,
+        )}
       >
-        {value}
+        <AnimatedNumber value={value} formatter={valueFormatter} />
       </p>
-      <p className="text-sm leading-relaxed text-muted-foreground">{hint}</p>
+      <p className="text-sm leading-relaxed text-muted-foreground/80">{hint}</p>
       {subcopy && (
-        <p className="text-xs text-muted-foreground/80">{subcopy}</p>
+        <p className="text-xs text-muted-foreground/70">{subcopy}</p>
       )}
     </div>
   );
+}
+
+function BudgetStatus({
+  actual,
+  planned,
+  usagePercent,
+}: {
+  actual: number;
+  planned: number;
+  usagePercent: number;
+}) {
+  const available = Math.max(planned - actual, 0);
+  const isOverBudget = actual > planned;
+  const isExhausted = !isOverBudget && usagePercent >= 100;
+  const showWarning = usagePercent >= 80 || isOverBudget;
+  const overPercent = Math.max(Math.round(usagePercent - 100), 0);
+
+  const statusLabel = isOverBudget
+    ? `Exceso: ${formatCurrencyNoDecimals(actual - planned)}`
+    : isExhausted
+      ? "Presupuesto agotado"
+      : `Disponible: ${formatCurrencyNoDecimals(available)}`;
+
+  const warningLabel = isOverBudget
+    ? `Sobrepasado +${overPercent}%`
+    : isExhausted
+      ? "Presupuesto agotado"
+      : `${usagePercent}% usado`;
+
+  return (
+    <div className="flex items-center justify-between text-xs text-muted-foreground/90">
+      <span>{statusLabel}</span>
+      {showWarning && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-100">
+          <AlertTriangle className="size-3" />
+          {warningLabel}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function getBudgetBarColor(percent: number) {
+  if (percent > 100) return "linear-gradient(90deg, #EF4444 0%, #B91C1C 100%)";
+  if (percent >= 100) return "linear-gradient(90deg, #10B981 0%, #059669 100%)";
+  return "linear-gradient(90deg, #3B82F6 0%, #0EA5E9 100%)";
 }
 
 function TransactionItem({ data }: { data: Tables<'transactions'> }) {
@@ -540,7 +650,7 @@ function InsightCard({
   title: string;
   value: string;
   description: string;
-  icon?: React.ElementType;
+  icon?: ElementType;
   tone?: "default" | "warning" | "success";
 }) {
   const tones = {
@@ -550,13 +660,15 @@ function InsightCard({
   } as const;
 
   return (
-    <div className="subdued-card flex h-full flex-col gap-2 p-4">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        <Icon className={`size-4 ${tones[tone]}`} />
-        {title}
+    <div className="flex h-full flex-col gap-4">
+      <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+        <span className="icon-ring size-10 text-muted-foreground">
+          <Icon className={`size-5 ${tones[tone]}`} />
+        </span>
+        <span>{title}</span>
       </div>
-      <p className="text-2xl font-semibold text-foreground">{value}</p>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <p className="text-3xl font-semibold text-foreground">{value}</p>
+      <p className="text-sm leading-relaxed text-muted-foreground/80">{description}</p>
     </div>
   );
 }
@@ -570,40 +682,41 @@ function TrendChart({
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
+          <CartesianGrid stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
           <XAxis
             dataKey="month"
-            tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }}
+            tick={{ fill: "rgba(248,250,252,0.7)", fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             tickFormatter={(value) => `S/${(value / 1000).toFixed(0)}k`}
-            tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }}
+            tick={{ fill: "rgba(248,250,252,0.7)", fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />
           <Tooltip
             formatter={(value: number) => formatCurrencyNoDecimals(value)}
             contentStyle={{
-              backgroundColor: "rgba(12,20,18,0.85)",
-              borderRadius: "12px",
-              border: "1px solid rgba(255,255,255,0.1)",
+              backgroundColor: "rgba(8,12,20,0.92)",
+              borderRadius: "14px",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "#f8fafc",
             }}
           />
           <Line
             type="monotone"
             dataKey="ingresos"
-            stroke="rgba(16, 185, 129, 1)"
-            strokeWidth={2}
-            dot={{ r: 3 }}
+            stroke="#10B981"
+            strokeWidth={3}
+            dot={{ r: 3, strokeWidth: 0, fill: "#10B981" }}
           />
           <Line
             type="monotone"
             dataKey="gastos"
-            stroke="rgba(248, 113, 113, 1)"
-            strokeWidth={2}
-            dot={{ r: 3 }}
+            stroke="#EF4444"
+            strokeWidth={3}
+            dot={{ r: 3, strokeWidth: 0, fill: "#EF4444" }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -647,7 +760,7 @@ function DashboardSkeleton() {
           <div key={`metric-skel-${index}`} className="subdued-card h-36 skeleton rounded-[22px]" />
         ))}
       </div>
-      <div className="glass-panel space-y-4 p-4 sm:p-6">
+      <div className="glass-panel space-y-6">
         <div className="h-6 w-40 skeleton rounded-full" />
         <div className="h-48 skeleton rounded-[22px]" />
       </div>
@@ -657,4 +770,43 @@ function DashboardSkeleton() {
       </div>
     </div>
   );
+}
+function AnimatedNumber({
+  value,
+  formatter = (val: number) => Math.round(val).toLocaleString("es-PE"),
+  duration = 900,
+}: {
+  value: number;
+  formatter?: (value: number) => string;
+  duration?: number;
+}) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const previousValue = useRef(value);
+  const frameRef = useRef<number>();
+
+  useEffect(() => {
+    const startValue = previousValue.current;
+    const diff = value - startValue;
+    const start = performance.now();
+
+    const animate = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(startValue + diff * eased);
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(animate);
+      } else {
+        previousValue.current = value;
+      }
+    };
+
+    if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    frameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, [value, duration]);
+
+  return <span>{formatter(displayValue)}</span>;
 }

@@ -60,7 +60,7 @@ export default function DashboardLayout({
         <div className="absolute right-[-160px] top-32 h-[320px] w-[320px] rounded-full bg-indigo-500/15 blur-[140px]" />
         <div className="absolute bottom-[-240px] left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
       </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-[1680px] flex-col gap-8 px-4 py-8 sm:px-6 md:flex-row md:px-8 lg:px-12 xl:px-16">
+      <div className="relative z-10 flex min-h-screen w-full flex-col gap-6 px-0 py-6 sm:px-0 sm:py-8 md:flex-row md:px-0">
         {isSidebarOpen && !isDesktop && (
           <button
             type="button"
@@ -70,7 +70,7 @@ export default function DashboardLayout({
           />
         )}
         <aside
-          className={`pointer-events-auto fixed inset-y-4 left-3 z-30 flex h-[calc(100vh-2rem)] w-[min(260px,88vw)] flex-col gap-10 rounded-[26px] border border-white/10 bg-white/5 px-4 py-6 shadow-[0_25px_65px_-40px_rgba(0,0,0,0.9)] backdrop-blur-2xl transition-transform duration-300 ease-in-out md:static md:h-auto md:min-w-[240px] md:w-[260px] md:px-5 md:py-8 ${isSidebarOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 md:translate-x-0 md:opacity-100"}`}
+          className={`pointer-events-auto fixed inset-y-4 left-3 z-30 flex h-[calc(100vh-2rem)] w-[min(260px,88vw)] flex-col gap-10 rounded-[30px] border border-white/10 bg-[rgba(15,23,42,0.95)] px-5 py-8 shadow-[0_25px_65px_-40px_rgba(0,0,0,0.9)] backdrop-blur-2xl transition-transform duration-300 ease-in-out md:static md:h-auto md:min-w-[260px] md:w-[280px] md:px-6 md:py-10 ${isSidebarOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 md:translate-x-0 md:opacity-100"}`}
           onTouchStart={handleSwipeStart}
           onTouchEnd={handleSwipeEnd}
         >
@@ -101,7 +101,7 @@ export default function DashboardLayout({
             <p>{today}</p>
           </div>
         </aside>
-        <main className="flex-1 space-y-6 pb-12 md:pl-4">
+        <main className="flex-1 space-y-6 pb-12 md:pl-0">
           <div className="flex items-center justify-between gap-4 md:hidden">
             <div>
               <p className="muted-label">Balance Compartido</p>
@@ -118,7 +118,7 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          <div className="glass-panel min-h-[70vh] p-4 sm:p-6 lg:p-8">
+          <div className="glass-panel min-h-[70vh]">
             {children}
           </div>
         </main>

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Pencil, Trash2, X } from "lucide-react";
+import { AlertTriangle, Loader2, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { useDashboardStore } from "@/store/dashboard-store";
@@ -14,7 +14,7 @@ import {
   useUpdateBudget,
 } from "@/hooks/use-budgets";
 import { useTransactions } from "@/hooks/use-transactions";
-import { formatCurrency } from "@/lib/utils/number";
+import { formatCurrencyNoDecimals } from "@/lib/utils/number";
 
 import { budgetSchema, type BudgetFormValues } from "./schema";
 import { categoryOptions } from "../transactions/schema";
@@ -199,13 +199,9 @@ function BudgetRowItem({
     }
   };
 
-  const varianceLabel = row.variance >= 0 ? "Disponible" : "Excedido";
-  const varianceStyle =
-    row.variance >= 0 ? "text-emerald-200" : "text-rose-300";
   const hasPlan = row.planned > 0;
   const utilization = hasPlan ? row.actual / row.planned : 0;
   const progressPercent = hasPlan ? Math.min(utilization, 1) * 100 : 0;
-  const isOverSpent = hasPlan ? utilization > 1 : row.actual > 0;
   const usagePercentage = hasPlan
     ? Math.round(Math.min(utilization, 1) * 100)
     : row.actual > 0
@@ -216,15 +212,12 @@ function BudgetRowItem({
     : row.actual > 0
       ? "100%"
       : "0%";
-  const barColor =
-    !hasPlan && row.actual > 0
-      ? "hsl(var(--danger))"
-      : utilization >= 1
-        ? "hsl(var(--danger))"
-        : "hsl(var(--primary))";
 
   return (
-    <article className="subdued-card space-y-4 p-4 md:p-5">
+    <article
+      className="subdued-card space-y-4 p-4 md:p-5"
+      data-highlight={row.planned > 0 && row.actual > row.planned ? "true" : undefined}
+    >
       {isEditing ? (
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -289,53 +282,48 @@ function BudgetRowItem({
         </form>
       ) : (
         <div className="space-y-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-foreground">
+              <p className="text-base font-semibold text-foreground">
                 {row.category}
               </p>
               <p className="text-xs text-muted-foreground">
                 {row.hasBudget
-                  ? `Presupuesto asignado ${formatCurrency(row.planned)}`
+                  ? "Consumo acumulado del mes"
                   : "Sin presupuesto asignado"}
               </p>
             </div>
-            <div className="text-right text-sm">
-              <p className="muted-label">Gastado</p>
-              <p className="text-base font-semibold text-foreground">
-                {formatCurrency(row.actual)}
-              </p>
-              <p className={`${varianceStyle} text-xs font-medium`}>
-                {varianceLabel} {formatCurrency(Math.abs(row.variance))}
-              </p>
-            </div>
-          </div>
-          <div>
-            <div className="budget-progress-track">
-              <div
-                className="budget-progress-fill"
-                style={{ width: barWidth, backgroundColor: barColor }}
-              />
-              <span className="budget-progress-label">
-                {hasPlan
-                  ? `${usagePercentage}%`
-                  : row.actual > 0
-                    ? "Sin plan"
-                    : "0%"}
-              </span>
-            </div>
-            {isOverSpent && (
-              <p className="text-xs font-medium text-rose-300">
-                Te excediste {formatCurrency(Math.abs(row.variance))} este mes.
-              </p>
-            )}
-            {!hasPlan && row.actual === 0 && (
-              <p className="text-xs text-muted-foreground">
-                Aún no asignas un presupuesto a esta categoría.
+            {row.hasBudget && (
+              <p className="text-sm font-semibold text-foreground">
+                {formatCurrencyNoDecimals(row.actual)}
+                <span className="ml-1 text-xs text-muted-foreground">
+                  / {formatCurrencyNoDecimals(row.planned)}
+                </span>
               </p>
             )}
           </div>
-          <div className="flex items-center justify-end gap-2">
+          <div className="budget-progress-track">
+            <div
+              className="budget-progress-fill"
+              style={{
+                width: row.hasBudget ? `${Math.min(usagePercentage, 100)}%` : barWidth,
+                background: getBudgetBarColor(usagePercentage),
+              }}
+            />
+            <span className="budget-progress-label">
+              {row.hasBudget
+                ? `${Math.max(usagePercentage, 0)}%`
+                : row.actual > 0
+                  ? "Sin plan"
+                  : "0%"}
+            </span>
+          </div>
+          <BudgetStatus
+            actual={row.actual}
+            planned={row.planned}
+            usagePercent={usagePercentage}
+          />
+          <div className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
               onClick={() => setIsEditing(true)}
@@ -360,4 +348,55 @@ function BudgetRowItem({
       )}
     </article>
   );
+}
+
+function BudgetStatus({
+  actual,
+  planned,
+  usagePercent,
+}: {
+  actual: number;
+  planned: number;
+  usagePercent: number;
+}) {
+  const available = Math.max(planned - actual, 0);
+  const isOverBudget = planned > 0 && actual > planned;
+  const isExhausted = !isOverBudget && planned > 0 && actual >= planned;
+  const showWarning = usagePercent >= 80 || isOverBudget;
+  const overPercent = Math.max(
+    planned > 0 ? Math.round((actual / planned) * 100 - 100) : 0,
+    0,
+  );
+
+  const statusLabel = isOverBudget
+    ? `Exceso: ${formatCurrencyNoDecimals(actual - planned)}`
+    : isExhausted
+      ? "Presupuesto agotado"
+      : planned > 0
+        ? `Disponible: ${formatCurrencyNoDecimals(available)}`
+        : "Sin presupuesto asignado";
+
+  const warningLabel = isOverBudget
+    ? `Sobrepasado +${overPercent}%`
+    : isExhausted
+      ? "Presupuesto agotado"
+      : `${usagePercent}% usado`;
+
+  return (
+    <div className="flex items-center justify-between text-xs text-muted-foreground/90">
+      <span>{statusLabel}</span>
+      {showWarning && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-100">
+          <AlertTriangle className="size-3" />
+          {warningLabel}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function getBudgetBarColor(percent: number) {
+  if (percent > 100) return "linear-gradient(90deg, #EF4444 0%, #B91C1C 100%)";
+  if (percent >= 100) return "linear-gradient(90deg, #10B981 0%, #059669 100%)";
+  return "linear-gradient(90deg, #3B82F6 0%, #0EA5E9 100%)";
 }

@@ -220,7 +220,11 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
     : daysInMonth;
   const dailyAverageExpense =
     elapsedDays > 0 ? totalExpenses / elapsedDays : totalExpenses;
-  const projectedMonthEndExpense = dailyAverageExpense * daysInMonth;
+  const totalBudgetPlanned = budgetList.reduce((acc, budget) => acc + (budget.amount ?? 0), 0);
+  const projectedMonthEndExpense = Math.max(
+    dailyAverageExpense * daysInMonth,
+    Math.max(totalExpenses, totalBudgetPlanned),
+  );
 
   return {
     totals: {
