@@ -782,7 +782,7 @@ function AnimatedNumber({
 }) {
   const [displayValue, setDisplayValue] = useState(value);
   const previousValue = useRef(value);
-  const frameRef = useRef<number>();
+  const frameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const startValue = previousValue.current;
