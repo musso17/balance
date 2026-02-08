@@ -3,20 +3,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, Loader2, Pencil, Trash2, X } from "lucide-react";
+import { AlertTriangle, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { useDashboardStore } from "@/store/dashboard-store";
 import {
-  useBudgets,
-  useCreateBudget,
-  useDeleteBudget,
-  useUpdateBudget,
-} from "@/hooks/use-budgets";
+  useBudgetTemplates,
+  useCreateBudgetTemplate,
+  useDeleteBudgetTemplate,
+  useUpdateBudgetTemplate,
+} from "@/hooks/use-budget-templates";
 import { useTransactions } from "@/hooks/use-transactions";
 import { formatCurrencyNoDecimals } from "@/lib/utils/number";
 
-import { budgetSchema, type BudgetFormValues } from "./schema";
+import { budgetTemplateSchema, type BudgetTemplateFormValues } from "./schema";
 import { categoryOptions } from "../transactions/schema";
 
 interface BudgetRow {
@@ -31,31 +31,30 @@ interface BudgetRow {
 export function BudgetList() {
   const { monthKey } = useDashboardStore();
   const {
-    data: budgets,
-    isLoading: isLoadingBudgets,
-    isError: budgetsError,
-    error: budgetErrorInstance,
-  } = useBudgets(monthKey);
+    data: templates,
+    isLoading: isLoadingTemplates,
+    isError: templatesError,
+    error: templateErrorInstance,
+  } = useBudgetTemplates();
 
   const { data: transactions, isLoading: isLoadingTransactions } =
     useTransactions(monthKey);
 
+  const [showAddForm, setShowAddForm] = useState(false);
+
   const rows = useMemo<BudgetRow[]>(() => {
-    if (!transactions) return [];
+    if (!templates) return [];
 
-    const normalizedBudgets =
-      budgets?.map((budget) => ({
-        ...budget,
-        normalizedCategory: budget.category.toLowerCase(),
-      })) ?? [];
+    const normalizedTemplates = templates.map((t) => ({
+      ...t,
+      normalizedCategory: t.category.toLowerCase(),
+    }));
 
-    return categoryOptions.map((category) => {
-      const normalized = category.toLowerCase();
-      const budget = normalizedBudgets.find(
-        (item) => item.normalizedCategory === normalized,
-      );
+    // Only show categories that have a template
+    return normalizedTemplates.map((template) => {
+      const normalized = template.normalizedCategory;
 
-      const actual = transactions
+      const actual = (transactions ?? [])
         .filter(
           (transaction) =>
             transaction.tipo === "gasto" &&
@@ -63,33 +62,47 @@ export function BudgetList() {
         )
         .reduce((acc, curr) => acc + curr.monto, 0);
 
-      const planned = budget?.amount ?? 0;
+      const planned = template.amount ?? 0;
       const variance = planned - actual;
 
       return {
-        id: budget?.id,
-        category,
+        id: template.id,
+        category: template.category,
         planned,
         actual,
         variance,
-        hasBudget: Boolean(budget),
+        hasBudget: true,
       };
     });
-  }, [budgets, transactions]);
+  }, [templates, transactions]);
 
-  const isLoading = isLoadingBudgets || isLoadingTransactions;
-  const hasAnyBudgetAssigned = rows.some((row) => row.hasBudget);
+  const isLoading = isLoadingTemplates || isLoadingTransactions;
+  const hasAnyBudgetAssigned = rows.length > 0;
 
   return (
     <div className="glass-panel space-y-6 p-4 sm:p-6">
-      <header className="space-y-1">
-        <h3 className="text-base font-semibold text-foreground">
-          Resumen del mes
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Compara lo planeado vs lo ejecutado para ajustar decisiones.
-        </p>
+      <header className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h3 className="text-base font-semibold text-foreground">
+            Presupuestos globales
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Estos límites aplican a todos los meses.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowAddForm(true)}
+          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-foreground transition hover:bg-white/10"
+        >
+          <Plus className="size-4" />
+          <span className="hidden sm:inline">Agregar</span>
+        </button>
       </header>
+
+      {showAddForm && (
+        <AddBudgetForm onClose={() => setShowAddForm(false)} existingCategories={rows.map(r => r.category.toLowerCase())} />
+      )}
 
       {isLoading && (
         <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/5 text-sm text-muted-foreground backdrop-blur-2xl">
@@ -100,17 +113,17 @@ export function BudgetList() {
         </div>
       )}
 
-      {budgetsError && (
+      {templatesError && (
         <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-          {budgetErrorInstance instanceof Error
-            ? budgetErrorInstance.message
+          {templateErrorInstance instanceof Error
+            ? templateErrorInstance.message
             : "Error al cargar los presupuestos"}
         </div>
       )}
 
-      {!isLoading && !hasAnyBudgetAssigned && (
+      {!isLoading && !hasAnyBudgetAssigned && !showAddForm && (
         <p className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur-2xl">
-          Define categorías con presupuesto para ver su ejecución.
+          Aún no has definido presupuestos. Haz clic en &quot;Agregar&quot; para crear uno.
         </p>
       )}
 
@@ -120,7 +133,6 @@ export function BudgetList() {
             <BudgetRowItem
               key={row.id ?? `category-${row.category}`}
               row={row}
-              monthKey={monthKey}
             />
           ))}
         </div>
@@ -129,72 +141,138 @@ export function BudgetList() {
   );
 }
 
-function BudgetRowItem({
-  row,
-  monthKey,
-}: {
-  row: BudgetRow;
-  monthKey: string;
-}) {
-  const [isEditing, setIsEditing] = useState(!row.hasBudget);
-  const createMutation = useCreateBudget();
-  const updateMutation = useUpdateBudget();
-  const deleteMutation = useDeleteBudget();
+function AddBudgetForm({ onClose, existingCategories }: { onClose: () => void; existingCategories: string[] }) {
+  const createMutation = useCreateBudgetTemplate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<BudgetTemplateFormValues>({
+    resolver: zodResolver(budgetTemplateSchema) as unknown as Resolver<BudgetTemplateFormValues>,
+    defaultValues: {
+      category: "",
+      amount: undefined,
+    },
+  });
+
+  const availableCategories = categoryOptions.filter(
+    (cat) => !existingCategories.includes(cat.toLowerCase())
+  );
+
+  const onSubmit = async (values: BudgetTemplateFormValues) => {
+    try {
+      await createMutation.mutateAsync(values);
+      toast.success("Presupuesto creado");
+      onClose();
+    } catch (error) {
+      console.error("[budget-templates] create", error);
+      toast.error("No pudimos crear el presupuesto");
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="subdued-card space-y-4 p-4"
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="flex flex-col gap-2 text-sm">
+          <span className="font-medium text-foreground">Categoría</span>
+          <select {...register("category")} className="soft-input">
+            <option value="">Selecciona una categoría</option>
+            {availableCategories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+          {errors.category && (
+            <span className="text-xs text-rose-500">{errors.category.message}</span>
+          )}
+        </label>
+        <label className="flex flex-col gap-2 text-sm">
+          <span className="font-medium text-foreground">Monto mensual</span>
+          <input
+            type="number"
+            step="0.01"
+            placeholder="0.00"
+            {...register("amount")}
+            className="soft-input"
+          />
+          {errors.amount && (
+            <span className="text-xs text-rose-500">{errors.amount.message}</span>
+          )}
+        </label>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={createMutation.isPending}
+          className="cta-button px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed"
+        >
+          {createMutation.isPending && <Loader2 className="size-4 animate-spin" />}
+          Guardar
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
+        >
+          <X className="size-3" /> Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function BudgetRowItem({ row }: { row: BudgetRow }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const updateMutation = useUpdateBudgetTemplate();
+  const deleteMutation = useDeleteBudgetTemplate();
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<BudgetFormValues>({
-    resolver: zodResolver(budgetSchema) as unknown as Resolver<BudgetFormValues>,
+  } = useForm<BudgetTemplateFormValues>({
+    resolver: zodResolver(budgetTemplateSchema) as unknown as Resolver<BudgetTemplateFormValues>,
     defaultValues: {
-      month_key: monthKey,
       category: row.category,
       amount: row.planned,
     },
   });
 
   useEffect(() => {
-    reset({ month_key: monthKey, category: row.category, amount: row.planned });
-  }, [monthKey, reset, row.category, row.planned]);
+    reset({ category: row.category, amount: row.planned });
+  }, [reset, row.category, row.planned]);
 
-  const onSubmit = async (values: BudgetFormValues) => {
+  const onSubmit = async (values: BudgetTemplateFormValues) => {
+    if (!row.id) return;
     try {
-      if (row.hasBudget && row.id) {
-        await updateMutation.mutateAsync({
-          id: row.id,
-          month_key: monthKey,
-          category: values.category,
-          amount: values.amount,
-        });
-        toast.success("Presupuesto actualizado");
-      } else {
-        await createMutation.mutateAsync({
-          month_key: monthKey,
-          category: values.category,
-          amount: values.amount,
-        });
-        toast.success("Presupuesto asignado");
-      }
+      await updateMutation.mutateAsync({
+        id: row.id,
+        amount: values.amount,
+      });
+      toast.success("Presupuesto actualizado");
       setIsEditing(false);
     } catch (error) {
-      console.error("[budgets] upsert", error);
-      toast.error("No pudimos guardar el presupuesto");
+      console.error("[budget-templates] update", error);
+      toast.error("No pudimos actualizar el presupuesto");
     }
   };
 
   const handleDelete = async () => {
-    if (!row.hasBudget || !row.id) return;
+    if (!row.id) return;
     const confirmDelete = window.confirm(
-      "¿Deseas eliminar este presupuesto?",
+      "¿Deseas eliminar este presupuesto? Esto afectará a todos los meses.",
     );
     if (!confirmDelete) return;
 
     try {
-      await deleteMutation.mutateAsync({ id: row.id, month_key: monthKey });
+      await deleteMutation.mutateAsync(row.id);
       toast.success("Presupuesto eliminado");
     } catch (error) {
-      console.error("[budgets] delete", error);
+      console.error("[budget-templates] delete", error);
       toast.error("No pudimos eliminar el presupuesto");
     }
   };
@@ -207,11 +285,6 @@ function BudgetRowItem({
     : row.actual > 0
       ? 100
       : 0;
-  const barWidth = hasPlan
-    ? `${progressPercent}%`
-    : row.actual > 0
-      ? "100%"
-      : "0%";
 
   return (
     <article
@@ -228,16 +301,11 @@ function BudgetRowItem({
             <input
               type="text"
               {...register("category")}
-              readOnly={!row.hasBudget}
-              aria-readonly={!row.hasBudget}
+              readOnly
+              aria-readonly
               className="soft-input"
-              style={!row.hasBudget ? { opacity: 0.75 } : undefined}
+              style={{ opacity: 0.75 }}
             />
-            {errors.category && (
-              <span className="text-xs text-rose-500">
-                {errors.category.message}
-              </span>
-            )}
           </label>
           <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">Monto</span>
@@ -256,10 +324,10 @@ function BudgetRowItem({
           <div className="md:col-span-2 flex items-center gap-3 pt-2">
             <button
               type="submit"
-              disabled={updateMutation.isPending || createMutation.isPending}
+              disabled={updateMutation.isPending}
               className="cta-button px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed"
             >
-              {(updateMutation.isPending || createMutation.isPending) && (
+              {updateMutation.isPending && (
                 <Loader2 className="size-4 animate-spin" />
               )}
               Guardar
@@ -267,11 +335,7 @@ function BudgetRowItem({
             <button
               type="button"
               onClick={() => {
-                reset({
-                  month_key: monthKey,
-                  category: row.category,
-                  amount: row.planned,
-                });
+                reset({ category: row.category, amount: row.planned });
                 setIsEditing(false);
               }}
               className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
@@ -288,34 +352,26 @@ function BudgetRowItem({
                 {row.category}
               </p>
               <p className="text-xs text-muted-foreground">
-                {row.hasBudget
-                  ? "Consumo acumulado del mes"
-                  : "Sin presupuesto asignado"}
+                Consumo del mes actual
               </p>
             </div>
-            {row.hasBudget && (
-              <p className="text-sm font-semibold text-foreground">
-                {formatCurrencyNoDecimals(row.actual)}
-                <span className="ml-1 text-xs text-muted-foreground">
-                  / {formatCurrencyNoDecimals(row.planned)}
-                </span>
-              </p>
-            )}
+            <p className="text-sm font-semibold text-foreground">
+              {formatCurrencyNoDecimals(row.actual)}
+              <span className="ml-1 text-xs text-muted-foreground">
+                / {formatCurrencyNoDecimals(row.planned)}
+              </span>
+            </p>
           </div>
           <div className="budget-progress-track">
             <div
               className="budget-progress-fill"
               style={{
-                width: row.hasBudget ? `${Math.min(usagePercentage, 100)}%` : barWidth,
+                width: `${Math.min(usagePercentage, 100)}%`,
                 background: getBudgetBarColor(usagePercentage),
               }}
             />
             <span className="budget-progress-label">
-              {row.hasBudget
-                ? `${Math.max(usagePercentage, 0)}%`
-                : row.actual > 0
-                  ? "Sin plan"
-                  : "0%"}
+              {`${Math.max(usagePercentage, 0)}%`}
             </span>
           </div>
           <BudgetStatus

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ElementType } from "react";
-import { addMonths, format, subDays } from "date-fns";
+import { addHours, addMonths, format, subDays } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   CircleDollarSign,
@@ -14,6 +14,7 @@ import {
   Coins,
   Wallet2,
   PiggyBank,
+  Download,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -31,6 +32,8 @@ import { formatCurrencyNoDecimals } from "@/lib/utils/number";
 import { formatDate, formatMonthKey } from "@/lib/utils/date";
 import type { Tables } from "@/lib/database.types";
 import { cn } from "@/lib/utils/style";
+import { pdf } from "@react-pdf/renderer";
+import { MonthlyReportPDF } from "@/components/reports/monthly-report-pdf";
 
 const RANGE_FILTERS = [
   { label: "Esta semana", value: "week" },
@@ -39,6 +42,17 @@ const RANGE_FILTERS = [
 ] as const;
 
 type RangeFilter = (typeof RANGE_FILTERS)[number]["value"];
+
+// House savings goal configuration
+const HOUSE_GOAL = 200_000; // S/. 200K inicial
+const HOUSE_STORAGE_KEY = "house-savings-current";
+
+function getHouseSavingsProgress(): number {
+  if (typeof window === "undefined") return 0;
+  const saved = localStorage.getItem(HOUSE_STORAGE_KEY);
+  const current = Number(saved) || 0;
+  return Math.min((current / HOUSE_GOAL) * 100, 100);
+}
 
 export function DashboardView() {
   const { monthKey, setMonthKey } = useDashboardStore();
@@ -186,9 +200,32 @@ export function DashboardView() {
   }, [data]);
 
   const handleShiftMonth = (step: number) => {
-    const baseDate = new Date(`${monthKey}-01T00:00:00.000Z`);
+    // Use the 15th of the month to avoid timezone issues when shifting months
+    const baseDate = new Date(`${monthKey}-15T12:00:00.000Z`);
     const nextDate = addMonths(baseDate, step);
     setMonthKey(format(nextDate, "yyyy-MM"));
+  };
+
+  const handleDownloadReport = async () => {
+    if (!data) return;
+
+    try {
+      const blob = await pdf(
+        <MonthlyReportPDF data={data} monthKey={monthKey} />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `reporte-financiero-${monthKey}.pdf`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+      // Fallback or alert could go here
+    }
   };
 
   const metricConfigs = useMemo(() => {
@@ -235,12 +272,9 @@ export function DashboardView() {
       },
       {
         key: "savings",
-        title: "Ahorro promedio",
-        value: Math.round((data.totals.savingsProgress ?? 0) * 100),
-        hint:
-          data.savings.length > 0
-            ? `Promedio sobre ${data.savings.length} metas activas`
-            : "Registra metas para medir tu progreso",
+        title: "Meta: Inicial Depa",
+        value: getHouseSavingsProgress(),
+        hint: "Progreso hacia S/. 200,000",
         icon: PiggyBank,
         tone: "default" as const,
         valueFormatter: (value: number) => `${Math.round(value)}%`,
@@ -284,6 +318,14 @@ export function DashboardView() {
               <ArrowRight className="size-4" />
             </button>
           </div>
+          <button
+            onClick={handleDownloadReport}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground transition hover:bg-white/10"
+            title="Descargar reporte del mes"
+          >
+            <Download className="size-4" />
+            <span className="hidden sm:inline">Reporte</span>
+          </button>
           <Link
             href="/transacciones"
             className="cta-button inline-flex items-center justify-center gap-2"
@@ -451,11 +493,11 @@ export function DashboardView() {
                       <div className="budget-progress-track">
                         <div
                           className="budget-progress-fill"
-                        style={{
-                          width: `${Math.min(usagePercent, 100)}%`,
-                          background: getBudgetBarColor(usagePercent),
-                        }}
-                      />
+                          style={{
+                            width: `${Math.min(usagePercent, 100)}%`,
+                            background: getBudgetBarColor(usagePercent),
+                          }}
+                        />
                         <span className="budget-progress-label">
                           {usagePercent > 100 ? `${usagePercent}%` : `${usagePercent}%`}
                         </span>

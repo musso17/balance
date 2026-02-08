@@ -25,16 +25,11 @@ export function SavingsDistribution() {
   }, [transactions]);
 
   const distribution = useMemo(() => {
-    const emergencyFundContribution = 2000;
-    let remainingBalance = balance - emergencyFundContribution;
-
-    if (remainingBalance < 0) remainingBalance = 0;
-
+    const availableBalance = Math.max(0, balance);
     const otherGoalsCount = 3;
-    const otherGoalsContribution = remainingBalance / otherGoalsCount;
+    const otherGoalsContribution = availableBalance / otherGoalsCount;
 
     return [
-      { name: "Fondo emergencia", amount: emergencyFundContribution },
       { name: "Viaje Londres", amount: otherGoalsContribution },
       { name: "Cumple Ana", amount: otherGoalsContribution },
       { name: "Amortización carro", amount: otherGoalsContribution },

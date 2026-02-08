@@ -15,6 +15,15 @@ export const debtSchema = z.object({
     .min(0, "El interés no puede ser negativo")
     .max(100, "El interés no puede ser mayor a 100")
     .optional(),
+  installments: z.coerce
+    .number()
+    .positive("Debe ser mayor a 0")
+    .optional(),
+  balloon_payment: z.coerce
+    .number()
+    .min(0, "No puede ser negativo")
+    .optional(),
+  is_balloon: z.boolean().optional(),
   status: z.enum(["activa", "pagada", "morosa"]),
 });
 

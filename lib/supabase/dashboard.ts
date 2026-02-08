@@ -1,4 +1,4 @@
-import { addMonths, differenceInCalendarDays, format } from "date-fns";
+import { addHours, addMonths, differenceInCalendarDays, format } from "date-fns";
 import { es } from "date-fns/locale";
 
 import { getHouseholdId } from "./household";
@@ -55,9 +55,15 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
     throw new Error("No household found for the current user.");
   }
 
-  const startDate = new Date(`${monthKey}-01T00:00:00.000Z`);
-  const endDate = addMonths(startDate, 1);
-  const historyStartDate = addMonths(startDate, -5);
+  // Use the 15th of the month to avoid timezone issues (UTC vs Local)
+  // This ensures that adding/subtracting months always lands in the correct month
+  const startDate = new Date(`${monthKey}-15T12:00:00.000Z`);
+
+  // For database queries, we need the actual start/end of the month
+  // But we derive them carefully from our safe mid-month date
+  const dbStartDate = new Date(`${monthKey}-01T00:00:00.000Z`);
+  const dbEndDate = addMonths(dbStartDate, 1);
+  const dbHistoryStartDate = addMonths(dbStartDate, -5);
 
   const formatDate = (d: Date) => d.toISOString().slice(0, 10);
   const formatMonthLabel = (d: Date, pattern = "MMMM") =>
@@ -75,8 +81,8 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
       .from("transactions")
       .select("*")
       .eq("household_id", householdId)
-      .gte("date", formatDate(startDate))
-      .lt("date", formatDate(endDate))
+      .gte("date", formatDate(dbStartDate))
+      .lt("date", formatDate(dbEndDate))
       .order("date", { ascending: false })
       .order("created_at", { ascending: true }),
     supabase
@@ -96,8 +102,8 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
       .from("transactions")
       .select("*")
       .eq("household_id", householdId)
-      .gte("date", formatDate(historyStartDate))
-      .lt("date", formatDate(endDate))
+      .gte("date", formatDate(dbHistoryStartDate))
+      .lt("date", formatDate(dbEndDate))
       .order("date", { ascending: true }),
   ]);
 
@@ -149,11 +155,11 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
   const savingsProgress =
     savingsList.length > 0
       ? savingsList.reduce((acc, goal) => {
-          const progress = goal.target_amount
-            ? (goal.current_amount ?? 0) / goal.target_amount
-            : 0;
-          return acc + progress;
-        }, 0) / savings.length
+        const progress = goal.target_amount
+          ? (goal.current_amount ?? 0) / goal.target_amount
+          : 0;
+        return acc + progress;
+      }, 0) / savings.length
       : 0;
 
   const balance = calculateBalance(totalIncomes, totalExpenses);
@@ -175,8 +181,10 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
   });
 
   const historyMonths: Date[] = [];
+  // Use the safe mid-month date for history calculation
+  const historyStartMidMonth = addMonths(startDate, -5);
   for (let i = 0; i < 6; i += 1) {
-    historyMonths.push(addMonths(historyStartDate, i));
+    historyMonths.push(addMonths(historyStartMidMonth, i));
   }
   const history = historyMonths.map((monthDate) => {
     const key = monthKeyFromDate(monthDate);
@@ -213,10 +221,10 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
   };
 
   const today = new Date();
-  const daysInMonth = differenceInCalendarDays(endDate, startDate);
-  const isCurrentMonth = today >= startDate && today < endDate;
+  const daysInMonth = differenceInCalendarDays(dbEndDate, dbStartDate);
+  const isCurrentMonth = today >= dbStartDate && today < dbEndDate;
   const elapsedDays = isCurrentMonth
-    ? Math.max(1, differenceInCalendarDays(today, startDate) + 1)
+    ? Math.max(1, differenceInCalendarDays(today, dbStartDate) + 1)
     : daysInMonth;
   const dailyAverageExpense =
     elapsedDays > 0 ? totalExpenses / elapsedDays : totalExpenses;

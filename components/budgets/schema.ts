@@ -11,3 +11,12 @@ export const budgetSchema = z.object({
 
 export type BudgetFormValues = z.infer<typeof budgetSchema>;
 
+export const budgetTemplateSchema = z.object({
+  category: z.string().min(1, "La categoría es obligatoria"),
+  amount: z.coerce
+    .number()
+    .positive("Ingresa un monto mayor a 0")
+    .max(1_000_000, "Monto demasiado alto"),
+});
+
+export type BudgetTemplateFormValues = z.infer<typeof budgetTemplateSchema>;
