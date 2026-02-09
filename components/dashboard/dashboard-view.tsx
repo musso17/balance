@@ -47,14 +47,7 @@ type RangeFilter = (typeof RANGE_FILTERS)[number]["value"];
 
 // House savings goal configuration
 const HOUSE_GOAL = 200_000; // S/. 200K inicial
-const HOUSE_STORAGE_KEY = "house-savings-current";
-
-function getHouseSavingsProgress(): number {
-  if (typeof window === "undefined") return 0;
-  const saved = localStorage.getItem(HOUSE_STORAGE_KEY);
-  const current = Number(saved) || 0;
-  return Math.min((current / HOUSE_GOAL) * 100, 100);
-}
+const HOUSE_GOAL_NAME = "Inicial Departamento";
 
 export function DashboardView() {
   const { monthKey, setMonthKey } = useDashboardStore();
@@ -275,7 +268,11 @@ export function DashboardView() {
       {
         key: "savings",
         title: "Meta: Inicial Depa",
-        value: getHouseSavingsProgress(),
+        value: (() => {
+          const houseGoal = data.savings.find((s) => s.goal_name === HOUSE_GOAL_NAME);
+          const current = houseGoal?.current_amount ?? 0;
+          return Math.min((current / HOUSE_GOAL) * 100, 100);
+        })(),
         hint: "Progreso hacia S/. 200,000",
         icon: PiggyBank,
         tone: "default" as const,

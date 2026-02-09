@@ -1,18 +1,18 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { Home, TrendingUp, Calendar, Target, Banknote, Pencil, Check, X } from "lucide-react";
-
+import { useMemo, useState } from "react";
+import { useSavings, useCreateSaving, useUpdateSaving } from "@/hooks/use-savings";
+import { Loader2, TrendingUp, Calendar, Target, Banknote, Pencil, Check, X } from "lucide-react";
+import { toast } from "react-hot-toast";
 import { formatCurrencyNoDecimals } from "@/lib/utils/number";
 
 // Configuration for the savings goal
 const GOAL_CONFIG = {
-    departmentValue: 1_000_000, // S/. 1M
-    downPaymentPercent: 0.20,   // 20% inicial
-    monthlyTarget: 4_500,       // S/. 4.5K mensual
+    departmentValue: 1_000_000,
+    downPaymentPercent: 0.20,
+    monthlyTarget: 4_500,
+    goalName: "Inicial Departamento"
 };
-
-const STORAGE_KEY = "house-savings-current";
 
 interface HouseSavingsTrackerProps {
     monthlySavingsRate?: number;
@@ -21,25 +21,40 @@ interface HouseSavingsTrackerProps {
 export function HouseSavingsTracker({
     monthlySavingsRate = GOAL_CONFIG.monthlyTarget,
 }: HouseSavingsTrackerProps) {
-    const [currentSavings, setCurrentSavings] = useState(0);
+    const { data: savingsGoals, isLoading } = useSavings();
+    const createMutation = useCreateSaving();
+    const updateMutation = useUpdateSaving();
+
+    const houseGoal = savingsGoals?.find(g => g.goal_name === GOAL_CONFIG.goalName);
+    const currentSavings = houseGoal?.current_amount ?? 0;
+    const downPaymentGoal = houseGoal?.target_amount ?? (GOAL_CONFIG.departmentValue * GOAL_CONFIG.downPaymentPercent);
+
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState("");
-    const downPaymentGoal = GOAL_CONFIG.departmentValue * GOAL_CONFIG.downPaymentPercent;
 
-    // Load from localStorage on mount
-    useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setCurrentSavings(Number(saved) || 0);
-        }
-    }, []);
-
-    const handleSave = () => {
+    const handleSave = async () => {
         const newValue = Number(editValue) || 0;
-        setCurrentSavings(newValue);
-        localStorage.setItem(STORAGE_KEY, String(newValue));
-        setIsEditing(false);
+
+        try {
+            if (houseGoal) {
+                await updateMutation.mutateAsync({
+                    id: houseGoal.id,
+                    current_amount: newValue
+                });
+            } else {
+                await createMutation.mutateAsync({
+                    goal_name: GOAL_CONFIG.goalName,
+                    target_amount: downPaymentGoal,
+                    current_amount: newValue,
+                    deadline: null // Optional: could calculate based on monthly target
+                });
+            }
+            toast.success("Meta actualizada");
+            setIsEditing(false);
+        } catch (error) {
+            toast.error("Error al guardar");
+            console.error(error);
+        }
     };
 
     const handleCancel = () => {
@@ -70,6 +85,10 @@ export function HouseSavingsTracker({
             yearsRemaining: monthsRemaining / 12,
         };
     }, [currentSavings, downPaymentGoal, monthlySavingsRate]);
+
+    if (isLoading) {
+        return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-muted-foreground" /></div>;
+    }
 
     const formatDate = (date: Date) => {
         return date.toLocaleDateString("es-PE", { month: "long", year: "numeric" });
