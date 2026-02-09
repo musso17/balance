@@ -44,6 +44,7 @@ export function TransactionForm() {
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const transactionType = watch("tipo");
   const selectedDebtId = watch("debt_id");
   const debtAction = watch("debt_action");

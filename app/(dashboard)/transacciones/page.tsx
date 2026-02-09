@@ -5,7 +5,7 @@ import { MonthSelector } from "@/components/ui/month-selector";
 export default function TransactionsPage() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 pr-14 sm:flex-row sm:items-center sm:justify-between sm:pr-16">
         <div className="space-y-2">
           <h2 className="text-lg font-semibold text-foreground">
             Registro de transacciones

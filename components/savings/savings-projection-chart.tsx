@@ -37,6 +37,7 @@ const GOAL_COLORS = [
 export function SavingsProjectionChart({ goals, currentSavings, monthlySavingsRate }: SavingsProjectionChartProps) {
     const [hiddenGoals, setHiddenGoals] = useState<string[]>([]);
 
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
     const { data, sortedGoals, mandatoryMonthlySavings, netAvailable, isAffordable } = useMemo(() => {
         if (goals.length === 0) return {
             data: [],
@@ -99,6 +100,7 @@ export function SavingsProjectionChart({ goals, currentSavings, monthlySavingsRa
             const date = addMonths(now, i);
             const monthLabel = format(date, "MMM yy", { locale: es });
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const dataPoint: any = {
                 month: monthLabel,
                 date: date.toISOString(),

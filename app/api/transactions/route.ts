@@ -5,6 +5,7 @@ import { getHouseholdId } from "@/lib/supabase/household";
 import type { TablesInsert } from "@/lib/database.types";
 import { addDemoTransaction, getDemoTransactions } from "@/lib/mocks/store";
 import { isDemoMode } from "@/lib/mocks/config";
+import { createTransactionSchema, parseTransactionPayload } from "@/lib/validations/transaction";
 
 export const revalidate = 0;
 
@@ -65,10 +66,18 @@ export async function POST(request: Request) {
   const supabase = createSupabaseServerClient();
   const householdId = await getHouseholdId();
 
-  const payload = (await request.json()) as Pick<
-    TablesInsert<'transactions'>,
-    "date" | "category" | "monto" | "persona" | "tipo" | "nota" | "metodo"
-  >;
+  const rawPayload = await request.json();
+
+  // Validate payload with Zod
+  const validation = parseTransactionPayload(createTransactionSchema, rawPayload);
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: validation.error },
+      { status: 400 },
+    );
+  }
+
+  const payload = validation.data;
 
   if (isDemoMode && !householdId) {
     const demoTransaction = addDemoTransaction({

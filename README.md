@@ -23,13 +23,11 @@ Aplicación web para que dos personas gestionen de manera colaborativa ingresos,
    npm install
    ```
 
-2. Variables de entorno (crear `.env.local`):
+2. Variables de entorno (copiar `.env.example` a `.env.local` y completar tus credenciales):
 
    ```bash
-   NEXT_PUBLIC_SUPABASE_URL=https://adfngbzvrasxoczgzgwg.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkZm5nYnp2cmFzeG9jemd6Z3dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyNDkwMDcsImV4cCI6MjA3NjgyNTAwN30.qmSwPa4Dx4QElcoqw_IxRzFcjSHmR83QFVFqWDPxb6k
-   SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkZm5nYnp2cmFzeG9jemd6Z3dnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTI0OTAwNywiZXhwIjoyMDc2ODI1MDA3fQ.86KmfWZFe8M-I4UxUbghUaRkvGjdWKAygAJWpxASB4o
-
+   cp .env.example .env.local
+   # Editar .env.local con tus credenciales de Supabase
    ```
 
    El redirect de magic link debe apuntar a `http://localhost:3000/auth/callback` en Supabase Auth.

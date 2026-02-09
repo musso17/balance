@@ -54,7 +54,43 @@ export function useCreateTransaction() {
 
       return (await response.json()) as Tables<'transactions'>;
     },
-    onSuccess: () => {
+    // Optimistic update: add transaction immediately for instant feedback
+    onMutate: async (newTransaction) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["transactions"] });
+
+      // Snapshot the previous value
+      const previousTransactions = queryClient.getQueryData<Tables<'transactions'>[]>(["transactions"]);
+
+      // Optimistically add to the cache
+      if (previousTransactions) {
+        const optimisticTransaction: Tables<'transactions'> = {
+          id: `temp-${Date.now()}`,
+          date: newTransaction.date,
+          category: newTransaction.category,
+          monto: newTransaction.monto,
+          persona: newTransaction.persona,
+          tipo: newTransaction.tipo,
+          nota: newTransaction.nota ?? null,
+          metodo: newTransaction.metodo ?? null,
+          household_id: "optimistic",
+          created_at: new Date().toISOString(),
+        };
+        queryClient.setQueryData<Tables<'transactions'>[]>(
+          ["transactions"],
+          [optimisticTransaction, ...previousTransactions]
+        );
+      }
+
+      return { previousTransactions };
+    },
+    // Rollback on error
+    onError: (_err, _newTransaction, context) => {
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(["transactions"], context.previousTransactions);
+      }
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["transactions"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },

@@ -1,4 +1,4 @@
-import { addHours, addMonths, differenceInCalendarDays, format } from "date-fns";
+import { addMonths, differenceInCalendarDays, format } from "date-fns";
 import { es } from "date-fns/locale";
 
 import { getHouseholdId } from "./household";
@@ -9,6 +9,7 @@ import type {
   Tables,
 } from "@/lib/database.types";
 import { calculateBalance } from "@/lib/utils/number";
+import { FIXED_MONTHLY_INCOME } from "@/lib/config/app";
 
 export interface DashboardData {
   totals: {
@@ -124,7 +125,9 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
     (item) => item.tipo === "gasto" || item.tipo === "deuda",
   );
 
-  const totalIncomes = incomes.reduce((acc, curr) => acc + curr.monto, 0);
+  // Add fixed monthly income to transaction-based income
+  const transactionIncomes = incomes.reduce((acc, curr) => acc + curr.monto, 0);
+  const totalIncomes = transactionIncomes + FIXED_MONTHLY_INCOME;
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.monto, 0);
   const monthlyDebtImpact = debtList.reduce(
     (acc, curr) => acc + curr.monthly_payment,
@@ -189,12 +192,14 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
   const history = historyMonths.map((monthDate) => {
     const key = monthKeyFromDate(monthDate);
     const bucket = monthlyHistoryMap.get(key) ?? { incomes: 0, expenses: 0 };
+    // Add fixed monthly income to each month's history
+    const monthIncomes = bucket.incomes + FIXED_MONTHLY_INCOME;
     return {
       month: key,
       label: format(monthDate, "MMM", { locale: es }),
-      incomes: bucket.incomes,
+      incomes: monthIncomes,
       expenses: bucket.expenses,
-      balance: calculateBalance(bucket.incomes, bucket.expenses),
+      balance: calculateBalance(monthIncomes, bucket.expenses),
     };
   });
 
@@ -205,8 +210,10 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
     incomes: 0,
     expenses: 0,
   };
+  // Add fixed monthly income to previous month for comparison
+  const previousIncomeWithFixed = previousTotals.incomes + FIXED_MONTHLY_INCOME;
   const previousBalance = calculateBalance(
-    previousTotals.incomes,
+    previousIncomeWithFixed,
     previousTotals.expenses,
   );
 
@@ -215,7 +222,7 @@ export async function getDashboardData(monthKey: string): Promise<DashboardData>
 
   const comparisons = {
     previousMonthLabel,
-    incomesDelta: delta(totalIncomes, previousTotals.incomes),
+    incomesDelta: delta(totalIncomes, previousIncomeWithFixed),
     expensesDelta: delta(totalExpenses, previousTotals.expenses),
     balanceDelta: delta(balance, previousBalance),
   };

@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { Fragment, useMemo, useState } from "react";
 import { CreditCard, Loader2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useTheme } from "next-themes";
 
 import { useDashboardStore } from "@/store/dashboard-store";
 import {
@@ -16,6 +17,7 @@ import type { Tables } from "@/lib/database.types";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { groupTransactionsBySection } from "./section-utils";
 import { cn } from "@/lib/utils/style";
+import { PERSONAS_FILTER_OPTIONS, TIPOS_FILTER_OPTIONS } from "@/lib/config/app";
 
 import { TransactionEditForm } from "./transaction-edit-form";
 
@@ -34,8 +36,8 @@ const MobileTransactionList = dynamic(
   },
 );
 
-const personas = ["Todos", "Marcelo", "Ana", "Compartido"];
-const tipos = ["Todos", "Ingreso", "Gasto", "Deuda"];
+const personas = PERSONAS_FILTER_OPTIONS;
+const tipos = TIPOS_FILTER_OPTIONS;
 
 export function TransactionTable() {
   const { monthKey } = useDashboardStore();
@@ -97,7 +99,7 @@ export function TransactionTable() {
       <div className="flex flex-col gap-2">
         <button
           onClick={() => refetch()}
-          className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-foreground transition hover:text-primary"
+          className="inline-flex items-center justify-center rounded-2xl border border-input bg-muted/20 px-3 py-2 text-sm font-semibold text-foreground transition hover:text-primary"
         >
           Refrescar datos
         </button>
@@ -131,7 +133,7 @@ export function TransactionTable() {
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
       <button
         onClick={() => refetch()}
-        className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:text-primary sm:w-auto"
+        className="w-full rounded-2xl border border-input bg-muted/20 px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition hover:text-primary sm:w-auto"
       >
         Refrescar
       </button>
@@ -218,7 +220,7 @@ export function TransactionTable() {
                     <col className="w-[130px]" />
                     <col className="w-[130px]" />
                   </colgroup>
-                  <thead className="bg-white/5 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#60A5FA] border-b border-[#3B82F6]/40">
+                  <thead className="bg-muted/30 text-[11px] font-semibold uppercase tracking-[0.3em] text-blue-500 dark:text-[#60A5FA] border-b border-border/50">
                     <tr>
                       <th className="px-4 py-4 text-start first:pl-6">Fecha</th>
                       <th className="px-4 py-4 text-start">Categoría</th>
@@ -229,10 +231,10 @@ export function TransactionTable() {
                       <th className="px-4 py-4 text-right last:pr-6">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/10 bg-transparent text-sm text-foreground">
+                  <tbody className="divide-y divide-border/40 bg-transparent text-sm text-foreground">
                     {sections.map((section) => (
                       <Fragment key={`${section.label}-${section.sortKey}`}>
-                        <tr className="bg-white/5 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/90">
+                        <tr className="bg-muted/30 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/90">
                           <td colSpan={7} className="px-6 py-3">
                             {section.label}
                           </td>
@@ -280,22 +282,30 @@ function Row({
   isDeleting: boolean;
   rowIndex: number;
 }) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   const isIncome = transaction.tipo === "ingreso";
   const cellBase = "px-4 py-4 align-middle first:pl-6 last:pr-6";
   const categoryLabel = transaction.category || "Sin categoría";
 
+  const badgeStyle = getCategoryBadgeStyle(categoryLabel, isDark);
+
   return (
     <tr
       className={cn(
-        "transition-all duration-200 hover:translate-x-1 hover:bg-[#3B82F6]/10",
-        rowIndex % 2 === 0 ? "bg-white/5" : "bg-transparent",
+        "transition-all duration-200 hover:translate-x-1 hover:bg-muted/40",
+        rowIndex % 2 === 0 ? "bg-muted/20" : "bg-transparent",
       )}
     >
       <td className={`${cellBase} whitespace-nowrap text-xs uppercase tracking-wide text-muted-foreground/80`}>
         {formatDate(transaction.date)}
       </td>
       <td className={`${cellBase} text-base font-semibold text-foreground`}>
-        <span className={cn("inline-flex items-center rounded-full px-3 py-1 text-xs font-medium", getCategoryBadgeClasses(categoryLabel))}>
+        <span
+          className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200"
+          style={badgeStyle}
+        >
           {categoryLabel}
         </span>
       </td>
@@ -306,7 +316,7 @@ function Row({
         {transaction.persona}
       </td>
       <td
-        className={`${cellBase} text-right text-base font-semibold ${isIncome ? "text-emerald-200" : "text-rose-300"}`}
+        className={`${cellBase} text-right text-base font-semibold ${isIncome ? "text-emerald-600 dark:text-emerald-200" : "text-rose-600 dark:text-rose-300"}`}
       >
         {formatCurrency(transaction.monto)}
       </td>
@@ -325,7 +335,7 @@ function Row({
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/10 text-muted-foreground/90 shadow-inner transition hover:border-sky-300/60 hover:bg-sky-400/20 hover:text-sky-100"
+            className="inline-flex size-9 items-center justify-center rounded-full border border-input bg-muted/40 text-muted-foreground/90 shadow-inner transition hover:border-sky-300/60 hover:bg-sky-400/20 hover:text-sky-600 dark:hover:text-sky-100"
           >
             <Pencil className="size-4" />
           </button>
@@ -333,7 +343,7 @@ function Row({
             type="button"
             onClick={onDelete}
             disabled={isDeleting}
-            className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/10 text-muted-foreground/90 shadow-inner transition hover:border-rose-300/60 hover:bg-rose-400/20 hover:text-rose-200 disabled:cursor-not-allowed"
+            className="inline-flex size-9 items-center justify-center rounded-full border border-input bg-muted/40 text-muted-foreground/90 shadow-inner transition hover:border-rose-300/60 hover:bg-rose-400/20 hover:text-rose-600 dark:hover:text-rose-200 disabled:cursor-not-allowed"
           >
             {isDeleting ? (
               <Loader2 className="size-4 animate-spin" />
@@ -347,15 +357,33 @@ function Row({
   );
 }
 
-function getCategoryBadgeClasses(category: string) {
+function getCategoryBadgeStyle(category: string, isDark: boolean) {
   const palettes = [
-    "bg-emerald-500/15 text-emerald-200 border border-emerald-400/20",
-    "bg-sky-500/15 text-sky-200 border border-sky-400/20",
-    "bg-amber-500/15 text-amber-100 border border-amber-400/20",
-    "bg-rose-500/15 text-rose-200 border border-rose-400/20",
-    "bg-violet-500/15 text-violet-200 border border-violet-400/20",
+    {
+      light: { backgroundColor: "#10B981", color: "#FFFFFF", border: "1px solid #059669" }, // Emerald 500
+      dark: { backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#a7f3d0", border: "1px solid rgba(52, 211, 153, 0.2)" }
+    },
+    {
+      light: { backgroundColor: "#0EA5E9", color: "#FFFFFF", border: "1px solid #0284C7" }, // Sky 500
+      dark: { backgroundColor: "rgba(14, 165, 233, 0.15)", color: "#bae6fd", border: "1px solid rgba(56, 189, 248, 0.2)" }
+    },
+    {
+      light: { backgroundColor: "#F59E0B", color: "#FFFFFF", border: "1px solid #D97706" }, // Amber 500
+      dark: { backgroundColor: "rgba(245, 158, 11, 0.15)", color: "#fde68a", border: "1px solid rgba(251, 191, 36, 0.2)" }
+    },
+    {
+      light: { backgroundColor: "#F43F5E", color: "#FFFFFF", border: "1px solid #E11D48" }, // Rose 500
+      dark: { backgroundColor: "rgba(244, 63, 94, 0.15)", color: "#fecdd3", border: "1px solid rgba(251, 113, 133, 0.2)" }
+    },
+    {
+      light: { backgroundColor: "#8B5CF6", color: "#FFFFFF", border: "1px solid #7C3AED" }, // Violet 500
+      dark: { backgroundColor: "rgba(139, 92, 246, 0.15)", color: "#ddd6fe", border: "1px solid rgba(167, 139, 250, 0.2)" }
+    },
   ];
+
   const base = category?.charCodeAt(0) ?? 0;
   const index = Math.abs(base + (category?.length ?? 0)) % palettes.length;
-  return palettes[index];
+  const palette = palettes[index];
+
+  return isDark ? palette.dark : palette.light;
 }

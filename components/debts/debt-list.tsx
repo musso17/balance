@@ -27,14 +27,16 @@ export function DebtList() {
 
   return (
     <div className="glass-panel space-y-6 p-4 sm:p-6">
-      <header className="space-y-1">
-        <h3 className="text-base font-semibold text-foreground">
-          Compromisos vigentes
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Controla el saldo pendiente y los pagos pactados.
-        </p>
-      </header>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Compromisos vigentes
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Controla el saldo pendiente y los pagos pactados.
+          </p>
+        </div>
+      </div>
 
       {isLoading && (
         <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/5 text-sm text-muted-foreground backdrop-blur-2xl">
@@ -126,13 +128,13 @@ function DebtRowItem({ debt }: { debt: Tables<'debts'> }) {
 
   const statusClass =
     debt.status === "pagada"
-      ? "border border-emerald-300/40 bg-emerald-400/15 text-emerald-100"
+      ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border border-emerald-500/30"
       : debt.status === "morosa"
-        ? "border border-rose-400/40 bg-rose-500/15 text-rose-100"
-        : "border border-amber-300/40 bg-amber-400/15 text-amber-100";
+        ? "bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-rose-300 border border-rose-500/30"
+        : "bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/30";
 
   return (
-    <article className="subdued-card space-y-4 p-4 md:p-5">
+    <article className="subdued-card space-y-4 p-4 md:p-5 rounded-3xl transition-all hover:scale-[1.01]">
       {isEditing ? (
         <form
           onSubmit={handleSubmit(onSubmit)}

@@ -81,31 +81,30 @@ export function BudgetList() {
 
   return (
     <div className="glass-panel space-y-6 p-4 sm:p-6">
-      <header className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <h3 className="text-base font-semibold text-foreground">
-            Presupuestos globales
-          </h3>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Presupuestos
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Estos límites aplican a todos los meses.
+            Gestiona tus límites de gasto mensual.
           </p>
         </div>
         <button
-          type="button"
           onClick={() => setShowAddForm(true)}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-foreground transition hover:bg-white/10"
+          className="cta-button shadow-lg transition-all hover:scale-105 inline-flex items-center justify-center px-5 py-2.5 font-semibold"
         >
-          <Plus className="size-4" />
-          <span className="hidden sm:inline">Agregar</span>
+          <Plus className="mr-2 size-4" />
+          Nuevo presupuesto
         </button>
-      </header>
+      </div>
 
       {showAddForm && (
         <AddBudgetForm onClose={() => setShowAddForm(false)} existingCategories={rows.map(r => r.category.toLowerCase())} />
       )}
 
       {isLoading && (
-        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/5 text-sm text-muted-foreground backdrop-blur-2xl">
+        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-muted bg-muted/30 text-sm text-muted-foreground backdrop-blur-2xl">
           <span className="flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             Cargando presupuestos...
@@ -122,7 +121,7 @@ export function BudgetList() {
       )}
 
       {!isLoading && !hasAnyBudgetAssigned && !showAddForm && (
-        <p className="rounded-2xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur-2xl">
+        <p className="rounded-2xl border border-dashed border-muted bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground backdrop-blur-2xl">
           Aún no has definido presupuestos. Haz clic en &quot;Agregar&quot; para crear uno.
         </p>
       )}
@@ -216,7 +215,7 @@ function AddBudgetForm({ onClose, existingCategories }: { onClose: () => void; e
         <button
           type="button"
           onClick={onClose}
-          className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
+          className="flex items-center gap-2 rounded-2xl border border-input bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
         >
           <X className="size-3" /> Cancelar
         </button>
@@ -307,6 +306,7 @@ function BudgetRowItem({ row }: { row: BudgetRow }) {
               style={{ opacity: 0.75 }}
             />
           </label>
+
           <label className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-foreground">Monto</span>
             <input
@@ -338,7 +338,7 @@ function BudgetRowItem({ row }: { row: BudgetRow }) {
                 reset({ category: row.category, amount: row.planned });
                 setIsEditing(false);
               }}
-              className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
+              className="flex items-center gap-2 rounded-2xl border border-input bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm transition hover:text-foreground"
             >
               <X className="size-3" /> Cancelar
             </button>
@@ -383,7 +383,7 @@ function BudgetRowItem({ row }: { row: BudgetRow }) {
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="rounded-2xl border border-white/10 bg-white/5 p-2 text-muted-foreground shadow-sm transition hover:text-primary"
+              className="rounded-2xl border border-input bg-muted/40 p-2 text-muted-foreground shadow-sm transition hover:text-primary"
             >
               <Pencil className="size-4" />
             </button>
@@ -391,7 +391,7 @@ function BudgetRowItem({ row }: { row: BudgetRow }) {
               type="button"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
-              className="rounded-2xl border border-white/10 bg-white/5 p-2 text-muted-foreground shadow-sm transition hover:text-rose-400 disabled:cursor-not-allowed"
+              className="rounded-2xl border border-input bg-muted/40 p-2 text-muted-foreground shadow-sm transition hover:text-rose-400 disabled:cursor-not-allowed"
             >
               {deleteMutation.isPending ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -442,7 +442,7 @@ function BudgetStatus({
     <div className="flex items-center justify-between text-xs text-muted-foreground/90">
       <span>{statusLabel}</span>
       {showWarning && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-100">
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-100">
           <AlertTriangle className="size-3" />
           {warningLabel}
         </span>
@@ -452,7 +452,7 @@ function BudgetStatus({
 }
 
 function getBudgetBarColor(percent: number) {
-  if (percent > 100) return "linear-gradient(90deg, #EF4444 0%, #B91C1C 100%)";
-  if (percent >= 100) return "linear-gradient(90deg, #10B981 0%, #059669 100%)";
-  return "linear-gradient(90deg, #3B82F6 0%, #0EA5E9 100%)";
+  if (percent > 100) return "linear-gradient(90deg, #F43F5E 0%, #E11D48 100%)"; // Rose for alert
+  if (percent >= 100) return "linear-gradient(90deg, #10B981 0%, #059669 100%)"; // Emerald for exact/complete
+  return "linear-gradient(90deg, #3B82F6 0%, #06B6D4 100%)"; // Blue to Cyan gradient
 }

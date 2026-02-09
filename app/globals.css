@@ -59,6 +59,78 @@
     --safe-area-top: env(safe-area-inset-top, 0px);
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --tab-bar-height: 80px;
+
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(148, 163, 184, 0.1);
+    --blob-opacity: 0.3;
+
+    --input-bg: rgba(255, 255, 255, 0.1);
+    --input-border: rgba(255, 255, 255, 0.1);
+
+    --highlight-bg: linear-gradient(145deg, rgba(59, 130, 246, 0.2), rgba(15, 23, 42, 0.6));
+    --highlight-border: rgba(148, 197, 252, 0.35);
+
+    --bg-image:
+      radial-gradient(circle at 10% 15%, rgba(0, 122, 255, 0.12), transparent 40%),
+      radial-gradient(circle at 80% 0%, rgba(88, 86, 214, 0.15), transparent 55%),
+      linear-gradient(180deg, rgba(15, 23, 42, 1), rgba(8, 12, 25, 1));
+  }
+
+  /* Light Mode */
+  .light {
+    --background: 210 40% 98%;
+    /* Slightly off-white for better depth */
+    --foreground: 222 47% 11%;
+
+    --muted: 210 40% 90%;
+    --muted-foreground: 215 16% 40%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --border: 214 32% 85%;
+    --input: 214 32% 90%;
+    --ring: 211 100% 50%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 160 84% 39%;
+    --secondary-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --danger: 0 84% 60%;
+    --danger-foreground: 0 0% 100%;
+
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 211 100% 50%;
+
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --blob-opacity: 0.6;
+    --bg-image: none;
+
+    --input-bg: rgba(0, 0, 0, 0.04);
+    --input-border: rgba(0, 0, 0, 0.08);
+
+    --input-bg: rgba(0, 0, 0, 0.04);
+    --input-border: rgba(0, 0, 0, 0.08);
+
+    --highlight-bg: linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%);
+    --highlight-border: rgba(59, 130, 246, 0.25);
+
+    --accent: 211 100% 50%;
+    --accent-foreground: 0 0% 100%;
   }
 
   * {
@@ -74,10 +146,7 @@
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
     background-color: hsl(var(--background));
-    background-image:
-      radial-gradient(circle at 10% 15%, rgba(0, 122, 255, 0.12), transparent 40%),
-      radial-gradient(circle at 80% 0%, rgba(88, 86, 214, 0.15), transparent 55%),
-      linear-gradient(180deg, rgba(15, 23, 42, 1), rgba(8, 12, 25, 1));
+    background-image: var(--bg-image);
     background-attachment: fixed;
     color: hsl(var(--foreground));
     min-height: 100vh;
@@ -95,8 +164,8 @@
 
   .glass-panel,
   .subdued-card {
-    border: 1px solid rgba(148, 163, 184, 0.1);
-    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
     backdrop-filter: blur(20px);
     box-shadow:
       0 4px 6px -1px rgba(0, 0, 0, 0.3),
@@ -123,15 +192,17 @@
 
   .glass-panel[data-highlight="true"],
   .subdued-card[data-highlight="true"] {
-    border-color: rgba(148, 197, 252, 0.35);
-    background: linear-gradient(145deg, rgba(59, 130, 246, 0.2), rgba(15, 23, 42, 0.6));
+    border-color: var(--highlight-border);
+    background: var(--highlight-bg);
     box-shadow:
-      0 25px 55px -40px rgba(59, 130, 246, 0.9),
-      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      0 25px 55px -40px rgba(59, 130, 246, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 
   .soft-input {
-    @apply w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm shadow-inner outline-none transition;
+    @apply w-full rounded-2xl border px-4 py-3 text-sm shadow-inner outline-none transition;
+    background: var(--input-bg);
+    border-color: var(--input-border);
     backdrop-filter: blur(18px);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(2, 8, 23, 0.4);
     color: hsl(var(--foreground));
@@ -148,14 +219,16 @@
 
   .cta-button {
     @apply inline-flex items-center justify-center gap-2 rounded-[30px] px-7 py-3.5 text-[15px] font-semibold uppercase tracking-wide transition;
-    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
-    color: #f1f5f9;
+    /* Turquoise Gradient: Teal-400 to Cyan-500 */
+    background: linear-gradient(135deg, #2dd4bf 0%, #06b6d4 100%);
+    box-shadow: 0 4px 14px rgba(6, 182, 212, 0.4);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 
   .cta-button:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
   }
 
   .cta-button:disabled {
@@ -357,4 +430,66 @@
 .ios-content {
   padding: 0 16px;
   padding-top: calc(8px + var(--safe-area-top));
+}
+
+/* Custom Badge Styles - Force Override to fix Light Mode */
+.badge-emerald {
+  background-color: #10B981 !important;
+  color: white !important;
+  border: 1px solid #059669 !important;
+}
+
+.badge-sky {
+  background-color: #0EA5E9 !important;
+  color: white !important;
+  border: 1px solid #0284C7 !important;
+}
+
+.badge-amber {
+  background-color: #F59E0B !important;
+  color: white !important;
+  border: 1px solid #D97706 !important;
+}
+
+.badge-rose {
+  background-color: #F43F5E !important;
+  color: white !important;
+  border: 1px solid #E11D48 !important;
+}
+
+.badge-violet {
+  background-color: #8B5CF6 !important;
+  color: white !important;
+  border: 1px solid #7C3AED !important;
+}
+
+/* Dark Mode Overrides */
+.dark .badge-emerald {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #a7f3d0 !important;
+  border-color: rgba(52, 211, 153, 0.2) !important;
+}
+
+.dark .badge-sky {
+  background-color: rgba(14, 165, 233, 0.15) !important;
+  color: #bae6fd !important;
+  border-color: rgba(56, 189, 248, 0.2) !important;
+}
+
+.dark .badge-amber {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #fde68a !important;
+  border-color: rgba(251, 191, 36, 0.2) !important;
+}
+
+.dark .badge-rose {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+  color: #fecdd3 !important;
+  border-color: rgba(251, 113, 133, 0.2) !important;
+}
+
+.dark .badge-violet {
+  background-color: rgba(139, 92, 246, 0.15) !important;
+  color: #ddd6fe !important;
+  border-color: rgba(167, 139, 250, 0.2) !important;
 }

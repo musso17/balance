@@ -34,6 +34,8 @@ import type { Tables } from "@/lib/database.types";
 import { cn } from "@/lib/utils/style";
 import { pdf } from "@react-pdf/renderer";
 import { MonthlyReportPDF } from "@/components/reports/monthly-report-pdf";
+import { MetricCard, InsightCard } from "@/components/ui/dashboard-cards";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 
 const RANGE_FILTERS = [
   { label: "Esta semana", value: "week" },
@@ -285,7 +287,7 @@ export function DashboardView() {
 
   return (
     <div className="space-y-12">
-      <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <header className="flex flex-col gap-6 pr-14 lg:flex-row lg:items-center lg:justify-between lg:pr-16">
         <div className="space-y-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-sky-200">
             <span className="size-2 rounded-full bg-sky-300" />
@@ -376,41 +378,37 @@ export function DashboardView() {
           </section>
 
           <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="glass-panel">
-              <InsightCard
-                title="Proyección fin de mes"
-                value={formatCurrencyNoDecimals(
-                  data.projections?.projectedMonthEndExpense ?? data.totals.expenses,
-                )}
-                description="Si mantienes el ritmo actual."
-              />
-            </div>
-            <div className="glass-panel">
-              <InsightCard
-                title="Gasto diario promedio"
-                value={formatCurrencyNoDecimals(
-                  data.projections?.dailyAverageExpense ?? data.totals.expenses,
-                )}
-                description="Calculado según los días contabilizados."
-              />
-            </div>
-            <div className="glass-panel">
-              <InsightCard
-                title="Alertas de presupuesto"
-                value={
-                  budgetAlerts.length > 0
-                    ? `${budgetAlerts.length} categorías`
-                    : "Sin alertas"
-                }
-                description={
-                  budgetAlerts.length > 0
-                    ? `${budgetAlerts[0].name} al ${Math.round(budgetAlerts[0].usage * 100)}%`
-                    : "Todas las categorías bajo control."
-                }
-                tone={budgetAlerts.length > 0 ? "warning" : "success"}
-                icon={AlertTriangle}
-              />
-            </div>
+            <InsightCard
+              title="Proyección fin de mes"
+              value={formatCurrencyNoDecimals(
+                data.projections?.projectedMonthEndExpense ?? data.totals.expenses,
+              )}
+              description="Si mantienes el ritmo actual."
+              tone="default"
+            />
+            <InsightCard
+              title="Gasto diario promedio"
+              value={formatCurrencyNoDecimals(
+                data.projections?.dailyAverageExpense ?? data.totals.expenses,
+              )}
+              description="Calculado según los días contabilizados."
+              tone="success"
+            />
+            <InsightCard
+              title="Alertas"
+              value={
+                budgetAlerts.length > 0
+                  ? `${budgetAlerts.length} categorías`
+                  : "Sin alertas"
+              }
+              description={
+                budgetAlerts.length > 0
+                  ? `${budgetAlerts[0].name} al ${Math.round(budgetAlerts[0].usage * 100)}%`
+                  : "Todas las categorías bajo control."
+              }
+              tone="warning"
+              icon={AlertTriangle}
+            />
           </section>
 
           <section className="glass-panel space-y-6">
@@ -519,92 +517,6 @@ export function DashboardView() {
   );
 }
 
-function MetricCard({
-  title,
-  value,
-  hint,
-  icon: Icon,
-  tone = "default",
-  subcopy,
-  className,
-  highlight = false,
-  valueFormatter,
-  style,
-}: {
-  title: string;
-  value: number;
-  hint: string;
-  icon: ElementType;
-  tone?: "default" | "positive" | "negative" | "info";
-  subcopy?: string;
-  className?: string;
-  highlight?: boolean;
-  valueFormatter?: (value: number) => string;
-  style?: CSSProperties;
-}) {
-  const tones = {
-    positive: {
-      label: "bg-emerald-500/15 text-emerald-200",
-      value: "text-emerald-100",
-      icon: "text-emerald-200 border-emerald-300/30",
-    },
-    negative: {
-      label: "bg-rose-500/15 text-rose-200",
-      value: "text-rose-200",
-      icon: "text-rose-200 border-rose-300/30",
-    },
-    default: {
-      label: "bg-white/10 text-foreground",
-      value: "text-foreground",
-      icon: "text-white border-white/20",
-    },
-    info: {
-      label: "bg-sky-500/15 text-sky-200",
-      value: "text-sky-100",
-      icon: "text-sky-100 border-sky-300/30",
-    },
-  } as const;
-
-  const toneStyles = tones[tone] ?? tones.default;
-
-  return (
-    <div
-      data-highlight={highlight ? "true" : undefined}
-      className={cn(
-        "subdued-card animate-card-pop group flex h-full flex-col gap-5 p-8 transition duration-300 ease-out",
-        className,
-      )}
-      style={style}
-    >
-      <div className="flex items-center gap-3">
-        <span className={cn("icon-ring size-12", toneStyles.icon)}>
-          <Icon className="size-6" />
-        </span>
-        <span
-          className={cn(
-            "flex-1 rounded-2xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.35em]",
-            toneStyles.label,
-          )}
-        >
-          {title}
-        </span>
-      </div>
-      <p
-        className={cn(
-          "text-[36px] font-bold leading-tight tracking-tight text-balance md:text-[42px]",
-          toneStyles.value,
-        )}
-      >
-        <AnimatedNumber value={value} formatter={valueFormatter} />
-      </p>
-      <p className="text-sm leading-relaxed text-muted-foreground/80">{hint}</p>
-      {subcopy && (
-        <p className="text-xs text-muted-foreground/70">{subcopy}</p>
-      )}
-    </div>
-  );
-}
-
 function BudgetStatus({
   actual,
   planned,
@@ -673,45 +585,12 @@ function TransactionItem({ data }: { data: Tables<'transactions'> }) {
       <p
         className={cn(
           "text-right text-sm font-semibold sm:text-base",
-          data.tipo === "ingreso" ? "text-emerald-200" : "text-rose-300",
+          data.tipo === "ingreso" ? "text-emerald-600 dark:text-emerald-200" : "text-rose-600 dark:text-rose-300",
         )}
       >
         {data.tipo === "gasto" ? "-" : "+"} {formatCurrencyNoDecimals(data.monto)}
       </p>
     </article>
-  );
-}
-
-function InsightCard({
-  title,
-  value,
-  description,
-  icon: Icon = CircleDollarSign,
-  tone = "default",
-}: {
-  title: string;
-  value: string;
-  description: string;
-  icon?: ElementType;
-  tone?: "default" | "warning" | "success";
-}) {
-  const tones = {
-    default: "text-muted-foreground",
-    warning: "text-amber-200",
-    success: "text-emerald-200",
-  } as const;
-
-  return (
-    <div className="flex h-full flex-col gap-4">
-      <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-        <span className="icon-ring size-10 text-muted-foreground">
-          <Icon className={`size-5 ${tones[tone]}`} />
-        </span>
-        <span>{title}</span>
-      </div>
-      <p className="text-3xl font-semibold text-foreground">{value}</p>
-      <p className="text-sm leading-relaxed text-muted-foreground/80">{description}</p>
-    </div>
   );
 }
 
@@ -813,42 +692,5 @@ function DashboardSkeleton() {
     </div>
   );
 }
-function AnimatedNumber({
-  value,
-  formatter = (val: number) => Math.round(val).toLocaleString("es-PE"),
-  duration = 900,
-}: {
-  value: number;
-  formatter?: (value: number) => string;
-  duration?: number;
-}) {
-  const [displayValue, setDisplayValue] = useState(value);
-  const previousValue = useRef(value);
-  const frameRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    const startValue = previousValue.current;
-    const diff = value - startValue;
-    const start = performance.now();
 
-    const animate = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplayValue(startValue + diff * eased);
-      if (progress < 1) {
-        frameRef.current = requestAnimationFrame(animate);
-      } else {
-        previousValue.current = value;
-      }
-    };
-
-    if (frameRef.current) cancelAnimationFrame(frameRef.current);
-    frameRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (frameRef.current) cancelAnimationFrame(frameRef.current);
-    };
-  }, [value, duration]);
-
-  return <span>{formatter(displayValue)}</span>;
-}

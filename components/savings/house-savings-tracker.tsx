@@ -30,6 +30,7 @@ export function HouseSavingsTracker({
     useEffect(() => {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setCurrentSavings(Number(saved) || 0);
         }
     }, []);
@@ -77,34 +78,34 @@ export function HouseSavingsTracker({
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Meta de ahorro
-                </p>
-                <h2 className="flex items-center gap-3 text-xl font-semibold text-foreground">
-                    <Home className="size-6 text-primary" />
-                    Inicial para Departamento
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                    Departamento de {formatCurrencyNoDecimals(GOAL_CONFIG.departmentValue)} — Inicial del {GOAL_CONFIG.downPaymentPercent * 100}%
-                </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                        Meta de Ahorro
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                        Inicial para Departamento
+                    </p>
+                </div>
             </div>
 
             {/* Editable Current Savings */}
-            <div className="glass-panel p-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Banknote className="size-6 text-emerald-500" />
+            <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 to-purple-700 p-6 text-white shadow-lg transition-all hover:scale-[1.01]">
+                <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="flex size-12 items-center justify-center rounded-full bg-white/20">
+                            <Banknote className="size-6 text-white" />
+                        </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">Monto ahorrado actualmente</p>
+                            <p className="text-sm font-medium text-purple-100">Monto ahorrado actualmente</p>
                             {isEditing ? (
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-lg text-muted-foreground">S/.</span>
+                                    <span className="text-2xl font-bold text-white/90">S/.</span>
                                     <input
                                         type="number"
                                         value={editValue}
                                         onChange={(e) => setEditValue(e.target.value)}
-                                        className="soft-input w-40 text-lg font-bold"
+                                        className="bg-white/10 text-white placeholder-white/50 rounded-lg px-3 py-1 text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-white/30 w-48"
                                         autoFocus
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") handleSave();
@@ -113,19 +114,19 @@ export function HouseSavingsTracker({
                                     />
                                     <button
                                         onClick={handleSave}
-                                        className="rounded-full bg-emerald-500/20 p-2 text-emerald-400 hover:bg-emerald-500/30"
+                                        className="rounded-full bg-white/20 p-2 text-white hover:bg-white/30 transition"
                                     >
-                                        <Check className="size-4" />
+                                        <Check className="size-5" />
                                     </button>
                                     <button
                                         onClick={handleCancel}
-                                        className="rounded-full bg-white/10 p-2 text-muted-foreground hover:bg-white/20"
+                                        className="rounded-full bg-white/10 p-2 text-white/70 hover:bg-white/20 transition"
                                     >
-                                        <X className="size-4" />
+                                        <X className="size-5" />
                                     </button>
                                 </div>
                             ) : (
-                                <p className="text-2xl font-bold text-emerald-400">
+                                <p className="text-4xl font-bold text-white tracking-tight">
                                     {formatCurrencyNoDecimals(currentSavings)}
                                 </p>
                             )}
@@ -134,21 +135,24 @@ export function HouseSavingsTracker({
                     {!isEditing && (
                         <button
                             onClick={handleStartEdit}
-                            className="rounded-full border border-white/10 bg-white/5 p-2 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                            className="group/btn flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
                         >
                             <Pencil className="size-4" />
+                            <span>Actualizar</span>
                         </button>
                     )}
                 </div>
+                {/* Decorative blob */}
+                <div className="absolute -right-12 -top-12 size-48 rounded-full bg-purple-500/30 blur-3xl pointer-events-none" />
             </div>
 
             {/* Main Progress Card */}
-            <div className="glass-panel overflow-hidden p-6">
-                <div className="grid gap-8 md:grid-cols-2">
+            <div className="glass-panel overflow-hidden p-6 md:p-8">
+                <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
                     {/* Progress Circle */}
-                    <div className="flex flex-col items-center justify-center">
+                    <div className="flex flex-col items-center justify-center py-4">
                         <div className="relative">
-                            <svg className="size-48" viewBox="0 0 100 100">
+                            <svg className="size-56 drop-shadow-2xl" viewBox="0 0 100 100">
                                 {/* Background circle */}
                                 <circle
                                     cx="50"
@@ -156,8 +160,8 @@ export function HouseSavingsTracker({
                                     r="42"
                                     fill="none"
                                     stroke="currentColor"
-                                    strokeWidth="8"
-                                    className="text-white/10"
+                                    strokeWidth="6"
+                                    className="text-white/5"
                                 />
                                 {/* Progress circle */}
                                 <circle
@@ -166,7 +170,7 @@ export function HouseSavingsTracker({
                                     r="42"
                                     fill="none"
                                     stroke="url(#progressGradient)"
-                                    strokeWidth="8"
+                                    strokeWidth="6"
                                     strokeLinecap="round"
                                     strokeDasharray={`${stats.progressPercent * 2.64} 264`}
                                     transform="rotate(-90 50 50)"
@@ -174,16 +178,16 @@ export function HouseSavingsTracker({
                                 />
                                 <defs>
                                     <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stopColor="#3B82F6" />
-                                        <stop offset="100%" stopColor="#10B981" />
+                                        <stop offset="0%" stopColor="#22d3ee" />
+                                        <stop offset="100%" stopColor="#a78bfa" />
                                     </linearGradient>
                                 </defs>
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-4xl font-bold text-foreground">
+                                <span className="text-5xl font-bold text-foreground tracking-tighter">
                                     {stats.progressPercent.toFixed(1)}%
                                 </span>
-                                <span className="text-sm text-muted-foreground">completado</span>
+                                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">completado</span>
                             </div>
                         </div>
                     </div>
